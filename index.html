@@ -21,7 +21,7 @@
  --page:#F4F6FA;--card:#FFFFFF;--line:#E4EAF4;--fieldbg:#FFFFFF;
  --ink:#14213D;--ink2:#3A4358;--ink3:#8A93A6;--soft:#EAF0FB;--bar:#0C1E4E;
  --warn-bg:#FDF9F0;--warn-ink:#6B5520;--err-bg:#FDECEF;--err-ink:#8C0A20;
- --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+ --serif:"Source Serif 4","Source Serif Pro","Times New Roman","Cambria",serif;
  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
 }
@@ -849,6 +849,7 @@ function openMenu(){
    +'<button class="a2" onclick="cycleTheme()">Giao diện: '+themeName()+'</button>'
    +'<button class="a2" onclick="renameDevice()">Kho dữ liệu: '+deviceLabel()+'</button>'
    +'<button class="a2" onclick="openGuide()">Hướng dẫn sử dụng</button>'
+   +'<button class="a2" onclick="openVars()">Danh mục biến — kiểm tra còn thiếu gì</button>'
    +'</div>'
    +'<input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="restore(this)">';
   if(DB.cases.length){
@@ -861,6 +862,61 @@ function openMenu(){
   sheet('Bảng điều khiển', DB.cases.length+' ca đã lưu', h);
   renderRows();
 }
+
+/* ============ DANH MỤC BIẾN ============ */
+function varState(f){
+  if(!depOK(f)) return 'na';
+  if(f.s==='F'&&!unlocked) return 'lock';
+  return val(f.k)!=='' ? 'done' : 'todo';
+}
+function openVars(){
+  var ORDER=['A','B','H','C','D','E','F','G'];
+  var n={done:0,todo:0,na:0,lock:0};
+  FIELDS.forEach(function(f){ n[varState(f)]++; });
+  var need=n.done+n.todo+n.lock;
+  var h='<div class="warn">Danh mục đầy đủ <b>'+FIELDS.length+' biến</b> của ca đang nhập. '
+   +'Thẻ <b>xanh</b> đã điền, <b>đỏ</b> chưa điền, xám là không áp dụng. Chạm vào thẻ để nhảy tới ô đó.</div>'
+   +'<div class="big" style="grid-template-columns:1fr 1fr 1fr">'
+   +'<div class="mcard"><span>Đã điền</span><b style="color:var(--green)">'+n.done+'</b></div>'
+   +'<div class="mcard"><span>Chưa điền</span><b style="color:var(--red)">'+(n.todo+n.lock)+'</b></div>'
+   +'<div class="mcard"><span>Hoàn tất</span><b>'+Math.round(n.done/(need||1)*100)+'%</b></div>'
+   +'</div>';
+  ORDER.forEach(function(sec){
+    var list=FIELDS.map(function(f,i){return {f:f,j:i+1};}).filter(function(o){return o.f.s===sec;});
+    if(!list.length)return;
+    h+='<div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">'+SECT[sec].t+'</div>';
+    list.forEach(function(o){
+      var f=o.f, st=varState(f), v=val(f.k);
+      var bg = st==='done'?'var(--green-l)':(st==='na'?'var(--soft)':'var(--red-l)');
+      var bc = st==='done'?'var(--green)':(st==='na'?'var(--line)':'var(--red)');
+      var tag= st==='done'?'<span class="tag tl">Đã điền</span>'
+        :(st==='na'?'<span class="tag" style="background:var(--soft);color:var(--ink3)">Không áp dụng</span>'
+        :(st==='lock'?'<span class="tag tw">Chờ mở mục F</span>':'<span class="tag tc">Chưa điền</span>'));
+      var def=(f.hint||'');
+      if(f.o) def+=(def?' · ':'')+'Mã hóa: '+f.o.join(' · ');
+      else if(f.t==='num') def+=(def?' · ':'')+'Khoảng hợp lý '+f.min+'–'+f.max+(f.u?' '+f.u:'');
+      else if(f.t==='calc') def+=(def?' · ':'')+'Tự tính, không nhập tay.';
+      h+='<div class="row" style="background:'+bg+';border-color:'+bc+';align-items:flex-start"'
+       +(st!=='na'?' onclick="jumpToVar(\''+f.k+'\')"':'')+'>'
+       +'<div class="l"><b>'+o.j+'. '+f.n+(f.req?' <span style="color:var(--red)">*</span>':'')
+       +(f.u?' <span style="font-weight:400;color:var(--ink3)">('+f.u+')</span>':'')+'</b>'
+       +(def?'<span style="display:block;margin-top:3px;line-height:1.45">'+def+'</span>':'')
+       +'<span style="display:block;margin-top:5px"><b style="color:var(--ink)">Đã nhập: </b>'+(v||'—')+'</span>'
+       +'</div>'+tag+'</div>';
+    });
+  });
+  sheet('Danh mục biến', n.done+'/'+need+' biến đã điền', h);
+}
+function jumpToVar(k){
+  var f=fld(k); if(!f)return;
+  closeSheet(); si=SECS.indexOf(f.s); render();
+  setTimeout(function(){
+    var el=document.getElementById('q_'+k); if(!el)return;
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.classList.add('flag'); setTimeout(function(){el.classList.remove('flag');},2000);
+  },90);
+}
+
 function openGuide(){
   sheet('Hướng dẫn','Đọc một lần là đủ',
    '<div class="card"><h3>Mẹo thao tác nhanh</h3><ul>'
