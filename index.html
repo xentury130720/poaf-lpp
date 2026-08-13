@@ -168,6 +168,23 @@ textarea{min-height:92px;resize:none}
  padding:14px 18px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:99;text-align:center;
  box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transform:translateY(14px);transition:.25s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
+
+.q{border-left:4px solid transparent}
+.q.f-done{border-left-color:#17876B;background:var(--card)}
+.q.f-todo{border-left-color:#7B4FA8}
+.q.f-na{border-left-color:#C7D0DE;opacity:.72}
+.q.f-done .lab{color:#17876B}
+.q.f-todo .lab{color:#7B4FA8}
+.q.f-na .lab{color:var(--ink3)}
+html[data-theme="dark"] .q.f-done{border-left-color:#5CCFA8}
+html[data-theme="dark"] .q.f-todo{border-left-color:#B48BDC}
+html[data-theme="dark"] .q.f-done .lab{color:#5CCFA8}
+html[data-theme="dark"] .q.f-todo .lab{color:#B48BDC}
+.q.err{border-left-color:var(--red)!important}
+.lgd{display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);
+ border-radius:12px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--grey)}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.lg1{background:#17876B}.lg2{background:#7B4FA8}.lg3{background:#C7D0DE}
 .hide{display:none!important}
 </style>
 </head>
@@ -547,7 +564,10 @@ function render(){
   document.getElementById('steps').innerHTML=ch;
 
   var rest=fs.filter(depOK).filter(function(f){return f.t==='sel'&&f.o.length===2&&f.o[0].indexOf('Không')>0&&!val(f.k);});
-  var h='<div class="sec-h"><div style="flex:1"><h1>'+SECT[s].t+'</h1>'
+  var h='<div class="lgd"><span><i class="lg1"></i>đã điền</span>'
+    +'<span><i class="lg2"></i>chưa điền</span><span><i class="lg3"></i>không cần</span>'
+    +'<span id="lgdCnt" style="margin-left:auto;font-weight:700;color:var(--ink)"></span></div>'
+    +'<div class="sec-h"><div style="flex:1"><h1>'+SECT[s].t+'</h1>'
     +(SECT[s].d?'<p>'+SECT[s].d+'</p>':'')+'</div>'
     +((rest.length>=3&&!(s==='F'&&!unlocked))?'<button class="quick" onclick="fillNo()">Còn '+rest.length+' câu<br>đánh dấu Không</button>':'')
     +'</div>';
@@ -562,7 +582,7 @@ function render(){
   var last=(si===SECS.length-1);
   document.getElementById('btnNext').textContent=last?'Lưu ca này':'Tiếp tục';
   document.getElementById('btnNext').className='nav '+(last?'n3':'n1');
-  paintFlags(); paintDot(); scrollTop();
+  paintFlags(); paintFieldStates(); paintDot(); scrollTop();
 }
 function fillNo(){
   var s=SECS[si], n=0;
@@ -576,7 +596,8 @@ function scrollTop(){document.getElementById('body').scrollTop=0;}
 function qHtml(f){
   if(!depOK(f))return '';
   var v=val(f.k);
-  var h='<div class="q" id="q_'+f.k+'"><div class="lab">'+f.n
+  var st=fieldState(f);
+  var h='<div class="q '+st+'" id="q_'+f.k+'"><div class="lab">'+f.n
     +(f.u?' <span class="u">('+f.u+')</span>':'')+(f.req?' <span class="rq">*</span>':'')+'</div>';
   if(f.hint)h+='<div class="hint">'+f.hint+'</div>';
   if(f.t==='sel'){
@@ -629,13 +650,32 @@ function jumpNext(k){
 }
 function typed(k,v){ cur[k]=v; recompute(); paintEuroIfVisible();
   if(k==='f8'||k==='f9'){paintCalc('f10');} if(k==='f76'){paintCalc('f77');}
-  paintCalc('f29'); validate(k); save(); clearTimeout(window._ft);
+  paintCalc('f29'); validate(k); paintFieldStates(); save(); clearTimeout(window._ft);
   window._ft=setTimeout(paintFlags,450); }
+
+function fieldState(f){
+  if(f.t==='calc'||f.t==='auto') return 'f-na';
+  if(!depOK(f)) return 'f-na';
+  if(f.s==='F'&&!unlocked) return 'f-na';
+  return (val(f.k)!=='')?'f-done':'f-todo';
+}
+function paintFieldStates(){
+  var done=0,todo=0;
+  FIELDS.forEach(function(f){
+    var st=fieldState(f);
+    if(st==='f-done')done++; else if(st==='f-todo')todo++;
+    var box=document.getElementById('q_'+f.k); if(!box)return;
+    box.classList.remove('f-done','f-todo','f-na'); box.classList.add(st);
+  });
+  var el=document.getElementById('lgdCnt');
+  if(el) el.textContent='Cả ca: đã điền '+done+' · còn '+todo;
+}
 function paintOne(k){
   var f=fld(k), box=document.getElementById('q_'+k); if(!box)return;
   var btns=box.querySelectorAll('.opt'), v=val(k), yn=(f.o&&f.o.length===2&&f.o[0].indexOf('Không')>0);
   f.o.forEach(function(o,i){ var b=btns[i]; if(!b)return;
     b.className='opt'+(v===o?' sel'+(yn&&i===0?' no':''):''); });
+  paintFieldStates();
 }
 function paintCalc(k){
   var box=document.getElementById('q_'+k); if(!box)return;
