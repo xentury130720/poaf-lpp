@@ -845,8 +845,9 @@ function openMenu(){
    +'<button class="a3" onclick="newCase()">Nhập ca mới</button>'
    +'<button class="a1" onclick="exportXlsx()">Xuất Excel ('+DB.cases.length+' ca)</button>'
    +'<button class="a2" onclick="backup()">Tải file sao lưu</button>'
-   +'<button class="a2" onclick="document.getElementById(\'imp\').click()">Nạp lại từ sao lưu</button>'
+   +'<button class="a2" onclick="document.getElementById(\'imp\').click()">Nạp file sao lưu</button>'
    +'<button class="a2" onclick="cycleTheme()">Giao diện: '+themeName()+'</button>'
+   +'<button class="a2" onclick="renameDevice()">Kho dữ liệu: '+deviceLabel()+'</button>'
    +'<button class="a2" onclick="openGuide()">Hướng dẫn sử dụng</button>'
    +'</div>'
    +'<input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="restore(this)">';
@@ -895,7 +896,7 @@ function exportXlsx(){
   FIELDS.forEach(function(f){dict.push([SECT[f.s].t,f.n,f.u||'',f.o?f.o.join(' · '):'',f.hint||'']);});
   var l=0,c2=0; DB.cases.forEach(function(x){if(x.f59==='1. Có')l++;else if(x.f59==='0. Không')c2++;});
   var meta=[['Thông tin xuất',''],['Thời điểm xuất',fmtT(new Date().toISOString())],
-    ['Nguồn','Nhập trên iPhone'],['Tổng số ca',DB.cases.length],['Nhóm LPP',l],['Nhóm chứng',c2],
+    ['Kho dữ liệu',deviceLabel()],['Tổng số ca',DB.cases.length],['Nhóm LPP',l],['Nhóm chứng',c2],
     ['Cỡ mẫu tối thiểu mỗi nhóm',TARGET],['',''],
     ['Ghi nhận thứ tự làm mù','Thời điểm mở phần biên bản phẫu thuật'],['Mã số','Mở phần F lúc']];
   DB.cases.forEach(function(x){meta.push([x.f2||'',x._unlockedAt?fmtT(x._unlockedAt):'(nhập trực tiếp)']);});
@@ -904,6 +905,7 @@ function exportXlsx(){
     'POAF_LPP_dulieu_'+stamp()+'.xlsx');
 }
 function backup(){
+  deviceLabel();
   var blob=new Blob([JSON.stringify(DB)],{type:'application/json'});
   DB.lastBackup=Date.now(); DB.backupAt=DB.cases.length; persist(); paintDot();
   share(blob,'POAF_LPP_saoluu_'+stamp()+'.json');
@@ -923,13 +925,107 @@ function dl(blob,name){
   setTimeout(function(){URL.revokeObjectURL(u);a.remove();},600);
   toast('Đã tạo '+name);
 }
+
+/* ============ NHÃN THIẾT BỊ ============ */
+function deviceLabel(){
+  if(!DB.device){
+    var ua=navigator.userAgent||'';
+    var kind=/iPhone/.test(ua)?'iPhone':(/iPad/.test(ua)?'iPad':(/Android/.test(ua)?'Android':'Máy tính'));
+    DB.device=kind+' · '+Math.random().toString(36).slice(2,6).toUpperCase();
+    persist();
+  }
+  return DB.device;
+}
+function renameDevice(){
+  var v=prompt('Đặt tên cho kho dữ liệu trên thiết bị này:', deviceLabel());
+  if(v&&v.trim()){ DB.device=v.trim().slice(0,40); persist(); toast('Đã đổi tên kho'); openMenu(); }
+}
+
+/* ============ GỘP DỮ LIỆU THEO MÃ SỐ ============ */
+function codeOf(c){ return String(c && c.f2 || '').trim().toUpperCase(); }
+function tOf(c){ var t=c && c._savedAt ? Date.parse(c._savedAt) : 0; return isNaN(t)?0:t; }
+function mergeReport(inc){
+  var mine={}, R={add:[],upd:[],keep:[],nocode:[],dupIn:[]};
+  DB.cases.forEach(function(c,i){ var k=codeOf(c); if(k) mine[k]=i; });
+  var seen={};
+  inc.forEach(function(c){
+    var k=codeOf(c);
+    if(!k){ R.nocode.push(c); return; }
+    if(seen[k]){ R.dupIn.push(k); return; }
+    seen[k]=1;
+    if(mine[k]===undefined){ R.add.push(c); return; }
+    var old=DB.cases[mine[k]];
+    if(tOf(c)>tOf(old)) R.upd.push({c:c,i:mine[k],code:k});
+    else R.keep.push(k);
+  });
+  return R;
+}
+function applyMerge(inc){
+  var R=mergeReport(inc);
+  R.upd.forEach(function(o){ DB.cases[o.i]=o.c; });
+  R.add.forEach(function(c){ DB.cases.push(c); });
+  R.nocode.forEach(function(c){ DB.cases.push(c); });
+  DB.cases.sort(function(a,b){ return tOf(a)-tOf(b); });
+  DB.cases.forEach(function(c,i){ c.f1=String(i+1); });
+  persist();
+  return R;
+}
 function restore(inp){
   var f=inp.files[0]; if(!f)return; var r=new FileReader();
-  r.onload=function(){ try{ var o=JSON.parse(r.result); if(!o.cases)throw 0;
-      if(DB.cases.length&&!confirm('Đang có '+DB.cases.length+' ca. Nạp file này sẽ THAY THẾ toàn bộ. Tiếp tục?'))return;
-      DB=o; if(!DB.cases)DB.cases=[]; persist(); toast('Đã nạp '+DB.cases.length+' ca'); newCase();
-    }catch(e){ toast('File sao lưu không đọc được'); } };
+  r.onload=function(){
+    var o;
+    try{ o=JSON.parse(r.result); }catch(e){ toast('File sao lưu không đọc được'); return; }
+    var inc = o && o.cases ? o.cases : (Array.isArray(o)?o:null);
+    if(!inc){ toast('File này không phải bản sao lưu của app'); return; }
+    window._pending={cases:inc,raw:o,name:f.name};
+    mergeSheet();
+  };
   r.readAsText(f); inp.value='';
+}
+function mergeSheet(){
+  var P=window._pending, inc=P.cases, R=mergeReport(inc);
+  var h='<div class="card"><h3>'+P.name+'</h3><p>File chứa <b>'+inc.length+'</b> ca'
+   +(P.raw&&P.raw.device?' · từ kho <b>'+P.raw.device+'</b>':'')+'.<br>'
+   +'Thiết bị này đang có <b>'+DB.cases.length+'</b> ca ở kho <b>'+deviceLabel()+'</b>.</p></div>';
+  h+='<div class="card"><h3>Nếu chọn Gộp</h3><p>'
+   +'<b style="color:var(--green)">Thêm mới '+R.add.length+' ca</b> — chưa có mã này trên máy.<br>'
+   +'<b style="color:var(--gold-d)">Cập nhật '+R.upd.length+' ca</b> — trùng mã, bản trong file lưu sau nên thay bản cũ.<br>'
+   +'<b>Giữ nguyên '+R.keep.length+' ca</b> — trùng mã nhưng bản trên máy mới hơn.'
+   +(R.nocode.length?'<br><b style="color:var(--red)">'+R.nocode.length+' ca không có mã số</b> — vẫn thêm vào, cần kiểm tra lại.':'')
+   +(R.dupIn.length?'<br><b style="color:var(--red)">'+R.dupIn.length+' mã lặp trong chính file</b> — chỉ lấy bản đầu.':'')
+   +'</p></div>';
+  if(R.upd.length) h+='<div class="warn"><b>Các ca sẽ bị ghi đè:</b><br>'+R.upd.map(function(o){return o.code;}).join(' · ')+'</div>';
+  h+='<div class="card"><h3>Sau khi gộp</h3><p>Tổng cộng <b>'+(DB.cases.length+R.add.length+R.nocode.length)+'</b> ca.</p></div>';
+  h+='<div class="act">'
+   +'<button class="a1" onclick="doMerge()">Gộp vào — giữ cả hai bên</button>'
+   +'<button class="a2" onclick="doReplace()">Thay thế toàn bộ bằng file này</button>'
+   +'<button class="a2" onclick="closeSheet()">Hủy</button></div>'
+   +'<div class="warn">“Thay thế” sẽ xóa sạch '+DB.cases.length+' ca đang có trên thiết bị này. Chỉ dùng khi chắc chắn.</div>';
+  sheet('Nạp file sao lưu','Chọn cách xử lý',h);
+}
+function doMerge(){
+  var P=window._pending; if(!P)return;
+  var R=applyMerge(P.cases);
+  if(P.raw&&P.raw.lastBackup) DB.lastBackup=Math.max(DB.lastBackup||0,P.raw.lastBackup);
+  persist(); window._pending=null;
+  var h='<div class="card"><h3>Đã gộp xong</h3><p>'
+   +'Thêm mới <b>'+R.add.length+'</b> ca<br>Cập nhật <b>'+R.upd.length+'</b> ca<br>Giữ nguyên <b>'+R.keep.length+'</b> ca'
+   +(R.nocode.length?'<br>Thêm <b>'+R.nocode.length+'</b> ca không có mã số':'')
+   +'</p><p>Tổng hiện có <b>'+DB.cases.length+'</b> ca. Số thứ tự đã đánh lại từ 1.</p></div>'
+   +'<div class="act"><button class="a3" onclick="openMenu()">Xem danh sách ca</button>'
+   +'<button class="a2" onclick="backup()">Sao lưu ngay bản đã gộp</button></div>';
+  sheet('Kết quả gộp', DB.cases.length+' ca', h);
+  toast('Đã gộp — tổng '+DB.cases.length+' ca');
+}
+function doReplace(){
+  var P=window._pending; if(!P)return;
+  if(!confirm('Xóa sạch '+DB.cases.length+' ca đang có và thay bằng '+P.cases.length+' ca trong file?')) return;
+  var dev=DB.device;
+  DB = (P.raw&&P.raw.cases) ? P.raw : {cases:P.cases};
+  if(!DB.cases)DB.cases=[]; DB.device=dev;
+  DB.cases.forEach(function(c,i){c.f1=String(i+1);});
+  DB.draft=null; persist(); window._pending=null;
+  toast('Đã thay thế — '+DB.cases.length+' ca'); newCase();
 }
 
 /* ================= KHỞI ĐỘNG ================= */
