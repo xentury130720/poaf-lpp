@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="POAF · LPP">
+<meta name="theme-color" content="#0C1E4E">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>POAF · LPP — Thu thập số liệu</title>
+<style>
+:root{
+ --navy:#0C1E4E;--navy2:#14213D;--gold:#E0A32E;--gold-d:#B88600;
+ --grey:#5B6577;--grey2:#3A4358;--grey3:#8A93A6;
+ --green:#17876B;--green-l:#EEF7F3;--red:#C2334C;--red-l:#FDECEF;
+ --blue-l:#EAF0FB;--blue-l2:#F4F6FA;--blue-b:#C7D4EC;
+ --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+ --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+ --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:var(--sans);background:var(--blue-l2);color:var(--navy2);font-size:16px;
+ -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+h1,h2,.serif{font-family:var(--serif)}
+button{font-family:inherit;border:0;background:none;cursor:pointer}
+
+/* ===== Khung ===== */
+#app{display:flex;flex-direction:column;height:100dvh}
+.top{background:var(--navy);color:#fff;padding:calc(var(--top) + 10px) 16px 10px;flex:0 0 auto;position:relative;z-index:5}
+.top-r{display:flex;align-items:center;gap:12px}
+.top .back{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.1);
+ display:flex;align-items:center;justify-content:center;font-size:21px;color:#fff;flex:0 0 auto}
+.top .back:disabled{opacity:.28}
+.top h2{font-size:16px;font-weight:600;line-height:1.2;flex:1;min-width:0}
+.top .sub{font-size:11.5px;color:#93A6CC;margin-top:2px;font-family:var(--sans)}
+.top .menu{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.1);
+ display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;flex:0 0 auto}
+.prog{height:4px;background:rgba(199,212,236,.22);border-radius:9px;margin-top:11px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--gold);border-radius:9px;transition:width .3s}
+.steps{display:flex;gap:5px;margin-top:9px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;
+ background:rgba(255,255,255,.09);color:#93A6CC;white-space:nowrap}
+.chip.on{background:var(--gold);color:var(--navy)}
+.chip.done{background:rgba(23,135,107,.28);color:#8FE0C4}
+
+/* ===== Nội dung ===== */
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px 8px}
+.sec-h{margin-bottom:14px}
+.sec-h h1{font-size:21px;color:var(--navy);line-height:1.25}
+.sec-h p{font-size:13px;color:var(--grey);margin-top:5px;line-height:1.5}
+.q{background:#fff;border:1px solid #E4EAF4;border-radius:14px;padding:14px 15px;margin-bottom:11px}
+.q.off{display:none}
+.q.err{border-color:var(--red);background:#FFFAFB}
+.q .lab{font-size:15px;font-weight:600;color:var(--grey2);line-height:1.35;margin-bottom:3px}
+.q .lab .u{font-weight:400;color:var(--grey3);font-size:13.5px}
+.q .lab .rq{color:var(--red)}
+.q .hint{font-size:12.5px;color:var(--grey3);line-height:1.45;margin-bottom:10px}
+.q .msg{font-size:12.5px;color:var(--red);font-weight:600;margin-top:7px}
+
+/* nút Có / Không */
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.opt{padding:14px 10px;border:1.5px solid #D5DEEC;border-radius:12px;background:#fff;
+ font-size:15.5px;font-weight:600;color:var(--grey2);text-align:center;transition:.12s}
+.opt:active{transform:scale(.97)}
+.opt.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+.opt.sel.no{background:var(--grey2);border-color:var(--grey2)}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:9px}
+.opts .opt{text-align:left;padding:13px 15px}
+.opts.two{display:grid;grid-template-columns:1fr 1fr}
+
+input,textarea{width:100%;padding:14px 14px;border:1.5px solid #D5DEEC;border-radius:12px;
+ font-size:17px;font-family:var(--sans);background:#fff;color:var(--navy2);margin-top:9px;-webkit-appearance:none}
+input:focus,textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(224,163,46,.16)}
+input[readonly]{background:var(--blue-l);font-family:var(--serif);font-weight:700;color:var(--navy)}
+textarea{min-height:92px;resize:none}
+.unit-in{position:relative}
+.unit-in .unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);margin-top:4px;
+ font-size:14px;color:var(--grey3);pointer-events:none}
+
+/* ===== Chân ===== */
+.foot{flex:0 0 auto;background:#fff;border-top:1px solid var(--blue-b);
+ padding:10px 14px calc(var(--bot) + 10px);display:flex;gap:9px;align-items:center}
+.nav{flex:1;padding:16px;border-radius:14px;font-size:16.5px;font-weight:700;text-align:center;transition:.12s}
+.nav:active{transform:scale(.98)}
+.n1{background:var(--navy);color:#fff}
+.n2{background:var(--blue-l);color:var(--navy);flex:0 0 92px}
+.n3{background:var(--green);color:#fff}
+.nav:disabled{opacity:.4}
+
+/* ===== EuroSCORE ===== */
+.euro{background:linear-gradient(135deg,#0C1E4E,#1B2C57);color:#fff;border-radius:16px;padding:16px;margin-bottom:12px}
+.euro .lab{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.euro .v{font-family:var(--serif);font-size:38px;font-weight:700;line-height:1.05;margin-top:5px}
+.euro .v small{font-size:18px;color:#93A6CC;font-weight:400}
+.euro .band{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px}
+.eb1{background:rgba(143,224,196,.22);color:#8FE0C4}
+.eb2{background:rgba(224,163,46,.22);color:#F3C97A}
+.eb3{background:rgba(255,140,160,.2);color:#FF9DAF}
+.euro .miss{font-size:13px;color:#FF9DAF;line-height:1.55;margin-top:8px}
+.euro .cc{font-size:12.5px;color:#93A6CC;margin-top:9px;line-height:1.5}
+.euro details{margin-top:11px;border-top:1px solid rgba(199,212,236,.2);padding-top:9px}
+.euro summary{font-size:13px;color:#C7D4EC;font-weight:600}
+.euro table{width:100%;font-size:12.5px;margin-top:9px;border-collapse:collapse}
+.euro td{padding:4px 0;border-bottom:1px solid rgba(199,212,236,.12);color:#E3EAF6}
+.euro td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:#fff}
+
+/* ===== Màn hình phụ ===== */
+.sheet{position:fixed;inset:0;background:var(--blue-l2);z-index:60;display:flex;flex-direction:column}
+.sheet .top{background:var(--navy)}
+.sheet-b{flex:1;overflow-y:auto;padding:16px 14px calc(var(--bot) + 20px);-webkit-overflow-scrolling:touch}
+.card{background:#fff;border:1px solid #E4EAF4;border-radius:14px;padding:15px;margin-bottom:11px}
+.card h3{font-family:var(--serif);font-size:16px;color:var(--navy);margin-bottom:7px}
+.card p,.card li{font-size:13.5px;color:var(--grey);line-height:1.65}
+.card ul,.card ol{margin-left:18px;margin-top:5px}
+.card b{color:var(--grey2)}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mcard{background:#fff;border:1px solid #E4EAF4;border-radius:14px;padding:13px}
+.mcard b{display:block;font-family:var(--serif);font-size:26px;color:var(--navy);line-height:1}
+.mcard span{font-size:11px;color:var(--grey3);text-transform:uppercase;letter-spacing:.6px}
+.mcard .pb{height:5px;background:var(--blue-l);border-radius:9px;margin-top:7px;overflow:hidden}
+.mcard .pb i{display:block;height:100%;background:var(--gold)}
+.row{background:#fff;border:1px solid #E4EAF4;border-radius:13px;padding:13px 14px;margin-bottom:8px;display:flex;align-items:center;gap:11px}
+.row:active{background:var(--blue-l)}
+.row .l{flex:1;min-width:0}
+.row .l b{font-size:15px;color:var(--navy);display:block}
+.row .l span{font-size:12.5px;color:var(--grey3)}
+.tag{padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;flex:0 0 auto}
+.tl{background:var(--green-l);color:var(--green)}.tc{background:var(--red-l);color:var(--red)}
+.tw{background:#FDF6E8;color:var(--gold-d)}
+.act{display:flex;flex-direction:column;gap:9px;margin-bottom:13px}
+.act button{padding:15px;border-radius:13px;font-size:15.5px;font-weight:700;text-align:center}
+.a1{background:var(--green);color:#fff}.a2{background:#fff;color:var(--navy);border:1px solid var(--blue-b)}
+.a3{background:var(--gold);color:var(--navy)}.a4{background:var(--red-l);color:var(--red)}
+.warn{background:#FDF9F0;border-left:4px solid var(--gold);border-radius:0 11px 11px 0;padding:12px 14px;font-size:13px;color:#6B5520;line-height:1.6;margin-bottom:12px}
+.errb{background:var(--red-l);border-left:4px solid var(--red);border-radius:0 11px 11px 0;padding:12px 14px;font-size:13.5px;color:#8C0A20;line-height:1.7;margin-bottom:12px}
+.toast{position:fixed;left:14px;right:14px;bottom:calc(var(--bot) + 18px);background:var(--navy);color:#fff;
+ padding:14px 18px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:99;text-align:center;
+ box-shadow:0 8px 30px rgba(12,30,78,.4);opacity:0;transform:translateY(14px);transition:.25s;pointer-events:none}
+.toast.on{opacity:1;transform:translateY(0)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+ <div class="top">
+  <div class="top-r">
+   <button class="back" id="btnBack" onclick="prevSec()">‹</button>
+   <div style="flex:1;min-width:0"><h2 id="secTitle">—</h2><div class="sub" id="secSub">—</div></div>
+   <button class="menu" onclick="openMenu()">☰</button>
+  </div>
+  <div class="prog"><i id="progBar" style="width:0"></i></div>
+  <div class="steps" id="steps"></div>
+ </div>
+ <div class="body" id="body"></div>
+ <div class="foot">
+  <button class="nav n2" id="btnPrev" onclick="prevSec()">Quay lại</button>
+  <button class="nav n1" id="btnNext" onclick="nextSec()">Tiếp tục</button>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+/* --- Danh mục 84 biến --- */
+var YN=["0. Không","1. Có"];
+var FIELDS=[
+{s:"A",k:"f1",n:"STT",t:"auto"},
+{s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"KHÔNG nhập họ tên hay số hồ sơ"},
+{s:"A",k:"f3",n:"Ngày phẫu thuật",t:"date",req:1},
+{s:"A",k:"f4",n:"PTV chính (mã hóa)",t:"txt",hint:"PTV1, PTV2…"},
+{s:"A",k:"f5",n:"Ngày thu thập",t:"date"},
+{s:"B",k:"f6",n:"Tuổi",u:"năm",t:"num",min:18,max:100,req:1},
+{s:"B",k:"f7",n:"Giới tính",t:"sel",o:["0. Nữ","1. Nam"],req:1},
+{s:"B",k:"f8",n:"Cân nặng",u:"kg",t:"num",min:25,max:150,dec:1},
+{s:"B",k:"f9",n:"Chiều cao",u:"cm",t:"num",min:120,max:200,dec:1},
+{s:"B",k:"f10",n:"BMI",u:"kg/m²",t:"calc",hint:"Tự tính từ cân nặng và chiều cao"},
+{s:"B",k:"f11",n:"Rối loạn lipid máu",t:"sel",o:YN,hint:"CT>5,2 · TG>1,7 · LDL>2,58 · HDL<1,03 mmol/L, hoặc đang dùng statin"},
+{s:"B",k:"f12",n:"Hút thuốc lá",t:"sel",o:YN,hint:"Đang hút hoặc có tiền sử"},
+{s:"B",k:"f13",n:"Tăng huyết áp",t:"sel",o:YN},
+{s:"B",k:"f14",n:"Đái tháo đường",t:"sel",o:YN,hint:"ADA"},
+{s:"B",k:"f15",n:"Bệnh thận mạn",t:"sel",o:YN,hint:"eGFR <60 kéo dài ≥3 tháng (KDIGO)"},
+{s:"B",k:"f16",n:"Bệnh phổi mạn",t:"sel",o:YN,hint:"Chủ yếu COPD"},
+{s:"B",k:"f17",n:"Bệnh mạch máu ngoại biên",t:"sel",o:YN,hint:"Đau cách hồi · can thiệp mạch ngoại biên · hẹp ≥50% ĐM cảnh"},
+{s:"B",k:"f18",n:"Tiền sử PCI",t:"sel",o:YN},
+{s:"B",k:"f19",n:"Tiền sử nhồi máu cơ tim",t:"sel",o:YN},
+{s:"B",k:"f20",n:"Tiền sử đột quỵ",t:"sel",o:YN},
+{s:"B",k:"f21",n:"Phân độ NYHA",t:"sel",o:["1. I","2. II","3. III","4. IV"]},
+{s:"B",k:"f22",n:"LVEF",u:"%",t:"num",min:10,max:80,dec:1,hint:"Simpson hai mặt phẳng · giảm khi ≤40%"},
+{s:"B",k:"f23",n:"Đường kính nhĩ trái",u:"mm",t:"num",min:20,max:80,dec:1,hint:"Trục dọc cạnh ức, CUỐI TÂM THU · giãn khi >40 mm"},
+{s:"B",k:"f24",n:"Số nhánh ĐMV tổn thương",t:"sel",o:["1. Một","2. Hai","3. Ba nhánh"],hint:"≥50% thân chung hoặc ≥70% nhánh khác"},
+{s:"B",k:"f25",n:"Tổn thương thân chung",t:"sel",o:YN,hint:"Hẹp ≥50% đường kính lòng mạch"},
+{s:"B",k:"f26",n:"Hemoglobin trước mổ",u:"g/L",t:"num",min:40,max:200,dec:0},
+{s:"B",k:"f27",n:"Kali máu trước mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2,hint:"Hạ kali khi <3,5"},
+{s:"B",k:"f28",n:"Chẹn beta trước mổ",t:"sel",o:YN},
+{s:"B",k:"f29",n:"EuroSCORE II",u:"%",t:"calc",hint:"Tự tính từ mục B₂ theo hệ số Nashef 2012 — không chép từ hồ sơ"},
+{s:"B",k:"f30",n:"Mức độ khẩn phẫu thuật",t:"sel",o:["0. Chương trình","1. Bán cấp","2. Cấp cứu","3. Cứu vãn"],hint:"Theo EuroSCORE II: chương trình · bán cấp (chưa xuất viện) · cấp cứu (trước ngày làm việc kế) · cứu vãn (đang hồi sức tim phổi)"},
+{s:"C",k:"f31",n:"POAF",t:"sel",o:YN,req:1,gate:1,hint:"Rung/cuồng nhĩ mới ≥30 giây · cửa sổ: kết thúc mổ → xuất viện"},
+{s:"C",k:"f32",n:"Thời điểm khởi phát POAF",u:"ngày hậu phẫu",t:"num",min:0,max:60,dec:0,dep:["f31","1. Có"],gate:1,hint:"Ngày mổ = ngày 0"},
+{s:"C",k:"f33",n:"PP phát hiện POAF",t:"sel",o:["0. Monitor liên tục","1. ECG thường quy"],dep:["f31","1. Có"],gate:1},
+{s:"C",k:"f34",n:"POAF hồi phục nhịp xoang khi xuất viện",t:"sel",o:YN,dep:["f31","1. Có"],gate:1},
+{s:"D",k:"f35",n:"Chẹn beta sau mổ",t:"sel",o:YN},
+{s:"D",k:"f36",n:"Amiodarone dự phòng sau mổ",t:"sel",o:YN,hint:"Dùng với mục đích dự phòng POAF"},
+{s:"D",k:"f37",n:"POAF cần điều trị",t:"sel",o:YN,dep:["f31","1. Có"],hint:"Phân biệt với POAF tự giới hạn"},
+{s:"D",k:"f38",n:"Kiểm soát tần số",t:"sel",o:YN,dep:["f31","1. Có"]},
+{s:"D",k:"f39",n:"Chuyển nhịp bằng amiodarone",t:"sel",o:YN,dep:["f31","1. Có"]},
+{s:"D",k:"f40",n:"Sốc điện chuyển nhịp",t:"sel",o:YN,dep:["f31","1. Có"]},
+{s:"D",k:"f41",n:"Chống đông cho POAF",t:"sel",o:YN,dep:["f31","1. Có"]},
+{s:"D",k:"f42",n:"Kali máu sau mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2},
+{s:"D",k:"f43",n:"Magie máu sau mổ",u:"mmol/L",t:"num",min:0.3,max:2,dec:2,hint:"Hạ magie khi <0,7"},
+{s:"E",k:"f44",n:"Tràn dịch màng tim sau mổ",t:"sel",o:YN,req:1,gate:1},
+{s:"E",k:"f45",n:"Kích thước tràn dịch màng tim lớn nhất",u:"mm",t:"num",min:0,max:60,dec:0,dep:["f44","1. Có"],hint:"Đo CUỐI TÂM TRƯƠNG · nhẹ <10, TB 10–20, nhiều >20"},
+{s:"E",k:"f46",n:"Vị trí tràn dịch màng tim",t:"sel",o:["0. Không tràn dịch/không áp dụng","1. Sau–bên","2. Khu trú khác","3. Toàn thể"]},
+{s:"E",k:"f47",n:"Tràn dịch màng tim cần can thiệp",t:"sel",o:YN,dep:["f44","1. Có"]},
+{s:"E",k:"f48",n:"Chèn ép tim cấp",t:"sel",o:YN},
+{s:"E",k:"f49",n:"Tràn dịch màng phổi trái cần can thiệp",t:"sel",o:YN},
+{s:"E",k:"f50",n:"Dẫn lưu ngực 24 giờ đầu",u:"mL",t:"num",min:0,max:5000,dec:0,hint:"Tổng qua tất cả ống, từ khi kết thúc mổ"},
+{s:"E",k:"f51",n:"Thời gian thở máy",u:"giờ",t:"num",min:0,max:2000,dec:1,hint:"Đặt lại NKQ thì cộng dồn"},
+{s:"E",k:"f52",n:"Thời gian nằm hồi sức",u:"ngày",t:"num",min:0,max:200,dec:1},
+{s:"E",k:"f53",n:"Thời gian nằm viện",u:"ngày",t:"num",min:0,max:365,dec:0,req:1,gate:1,hint:"HẬU PHẪU: ngày mổ = ngày 0 → xuất viện"},
+{s:"E",k:"f54",n:"Mổ lại cầm máu",t:"sel",o:YN,gate:1,hint:"Trong cùng đợt nằm viện"},
+{s:"E",k:"f55",n:"Đột quỵ sau mổ",t:"sel",o:YN,gate:1,hint:"Thiếu hụt thần kinh mới ≥24 giờ, xác nhận CT/MRI"},
+{s:"E",k:"f56",n:"Tổn thương thận cấp cần lọc thận",t:"sel",o:YN},
+{s:"E",k:"f57",n:"Viêm phổi sau mổ",t:"sel",o:YN,gate:1,hint:"Tiêu chuẩn CDC/NHSN"},
+{s:"E",k:"f58",n:"Tử vong nội viện",t:"sel",o:YN,req:1,gate:1,hint:"Gồm cả bệnh nặng thân nhân xin về"},
+{s:"F",k:"f59",n:"LPP",t:"sel",o:YN,req:1,hint:"BIẾN PHƠI NHIỄM"},
+{s:"F",k:"f60",n:"Số cầu nối",u:"miệng nối",t:"num",min:1,max:8,dec:0,hint:"SỐ MIỆNG NỐI XA · cầu tuần tự: mỗi miệng nối xa tính một"},
+{s:"F",k:"f61",n:"Sử dụng động mạch ngực trong",t:"sel",o:["0. Không","1. Một bên (SIMA)","2. Hai bên (BIMA)"]},
+{s:"F",k:"f62",n:"Cầu nối toàn động mạch",t:"sel",o:YN,hint:"Không dùng tĩnh mạch hiển"},
+{s:"F",k:"f63",n:"Tái tưới máu hoàn toàn",t:"sel",o:YN},
+{s:"F",k:"f64",n:"Thời gian phẫu thuật",u:"phút",t:"num",min:60,max:900,dec:0,hint:"Rạch da → đóng da"},
+{s:"F",k:"f65",n:"Lượng máu mất trong mổ",u:"mL",t:"num",min:0,max:5000,dec:0},
+{s:"F",k:"f66",n:"Truyền máu trong mổ",t:"sel",o:YN,hint:"≥1 đơn vị, từ rạch da đến rời phòng mổ"},
+{s:"F",k:"f67",n:"Dùng thuốc vận mạch/trợ tim",t:"sel",o:YN,hint:"≥1 thuốc truyền TM liên tục, trong mổ hoặc 24 giờ đầu"},
+{s:"F",k:"f68",n:"Đặt IABP",t:"sel",o:YN},
+{s:"F",k:"f69",n:"Đặt dẫn lưu màng phổi trái",t:"sel",o:YN},
+{s:"F",k:"f70",n:"Mở màng phổi trong mổ",t:"sel",o:YN,hint:"Gồm cả mở khi bóc động mạch ngực trong"},
+{s:"F",k:"f71",n:"Bên màng phổi được mở",t:"sel",o:["0. Không","1. Trái","2. Phải","3. Hai bên"],dep:["f70","1. Có"]},
+{s:"G",k:"f72",n:"Hồ sơ được đối chiếu chéo",t:"sel",o:YN,hint:"10% hồ sơ chọn ngẫu nhiên"},
+{s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:74,dec:0,dep:["f72","1. Có"]},
+{s:"G",k:"f74",n:"Ghi chú",t:"area"},
+{s:"H",k:"f75",n:"Đái tháo đường phụ thuộc insulin",t:"sel",o:YN,hint:"Đang điều trị bằng insulin tại thời điểm phẫu thuật"},
+{s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4"},
+{s:"H",k:"f77",n:"Độ thanh thải creatinin",u:"mL/phút",t:"calc",hint:"Tự tính theo Cockcroft–Gault từ tuổi, cân nặng, giới, creatinin"},
+{s:"H",k:"f78",n:"Đang lọc máu định kỳ",t:"sel",o:YN,hint:"Bất kể độ thanh thải creatinin"},
+{s:"H",k:"f79",n:"Suy giảm vận động nặng",t:"sel",o:YN,hint:"Do bệnh thần kinh hoặc cơ xương khớp, ảnh hưởng nặng tới sinh hoạt hằng ngày"},
+{s:"H",k:"f80",n:"Viêm nội tâm mạc đang hoạt động",t:"sel",o:YN,hint:"Còn đang dùng kháng sinh điều trị viêm nội tâm mạc lúc mổ"},
+{s:"H",k:"f81",n:"Tình trạng nguy kịch trước mổ",t:"sel",o:YN,hint:"Nhịp nhanh thất/rung thất hoặc đột tử được cứu sống · xoa bóp tim · thở máy trước khi vào phòng mổ · vận mạch · bóng đối xung · vô niệu hoặc thiểu niệu <10 mL/giờ"},
+{s:"H",k:"f82",n:"Đau thắt ngực CCS độ 4",t:"sel",o:YN,hint:"Đau ngực khi nghỉ hoặc khi gắng sức rất nhẹ"},
+{s:"H",k:"f83",n:"Nhồi máu cơ tim trong vòng 90 ngày",t:"sel",o:YN,hint:"Tính đến ngày phẫu thuật"},
+{s:"H",k:"f84",n:"Áp lực động mạch phổi tâm thu",u:"mmHg",t:"num",min:10,max:120,dec:0,hint:"Ước tính trên siêu âm tim trước mổ"}
+];
+var SECT={A:{t:"A. Hành chính",d:"Thông tin định danh nghiên cứu"},
+B:{t:"B. Đặc điểm trước mổ",d:"Nhân trắc, bệnh nền, cận lâm sàng, nguy cơ"},
+C:{t:"C. Kết cục chính — POAF",d:"Đọc phần này TRƯỚC khi mở biên bản phẫu thuật"},
+D:{t:"D. Điều trị sau mổ",d:""},
+E:{t:"E. Kết cục phụ",d:""},
+F:{t:"F. Đặc điểm trong mổ",d:"Chỉ mở sau khi hoàn tất phần C, D, E"},
+G:{t:"G. Đối chiếu & ghi chú",d:""},
+H:{t:"B₂. Thành phần EuroSCORE II",d:"Chỉ những yếu tố chưa có ở mục B. Điểm được tính tự động ngay bên dưới."}};
+
+
+/* --- Bộ ghi XLSX ngoại tuyến --- */
+var CRCT=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){var c=0xFFFFFFFF;for(var i=0;i<b.length;i++)c=CRCT[(c^b[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function u8(s){var o=[],i,cp;for(i=0;i<s.length;i++){cp=s.charCodeAt(i);
+ if(cp<0x80)o.push(cp);
+ else if(cp<0x800){o.push(0xC0|cp>>6,0x80|cp&63);}
+ else if(cp>=0xD800&&cp<0xDC00){var lo=s.charCodeAt(++i),u=0x10000+((cp-0xD800)<<10)+(lo-0xDC00);o.push(0xF0|u>>18,0x80|(u>>12&63),0x80|(u>>6&63),0x80|u&63);}
+ else{o.push(0xE0|cp>>12,0x80|(cp>>6&63),0x80|cp&63);} }
+ return new Uint8Array(o);}
+function zip(files){
+ var parts=[],cd=[],off=0;
+ function w16(a,v){a.push(v&255,(v>>8)&255);} function w32(a,v){a.push(v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255);}
+ files.forEach(function(f){
+  var d=u8(f.data), nm=u8(f.name), c=crc32(d), h=[];
+  w32(h,0x04034b50); w16(h,20); w16(h,0); w16(h,0); w16(h,0); w16(h,0);
+  w32(h,c); w32(h,d.length); w32(h,d.length); w16(h,nm.length); w16(h,0);
+  var hb=new Uint8Array(h);
+  parts.push(hb,nm,d);
+  var e=[];
+  w32(e,0x02014b50); w16(e,20); w16(e,20); w16(e,0); w16(e,0); w16(e,0); w16(e,0);
+  w32(e,c); w32(e,d.length); w32(e,d.length); w16(e,nm.length); w16(e,0); w16(e,0); w16(e,0); w16(e,0); w32(e,0); w32(e,off);
+  cd.push(new Uint8Array(e),nm);
+  off+=hb.length+nm.length+d.length;
+ });
+ var cdlen=cd.reduce(function(a,b){return a+b.length;},0), end=[];
+ w32(end,0x06054b50); w16(end,0); w16(end,0); w16(end,files.length); w16(end,files.length);
+ w32(end,cdlen); w32(end,off); w16(end,0);
+ var all=parts.concat(cd,[new Uint8Array(end)]);
+ var tot=all.reduce(function(a,b){return a+b.length;},0), out=new Uint8Array(tot), p=0;
+ all.forEach(function(a){out.set(a,p);p+=a.length;});
+ return out;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');}
+function colName(n){var s='';while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26;}return s;}
+function buildXlsx(sheets){
+ var ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+  +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+  +'<Default Extension="xml" ContentType="application/xml"/>'
+  +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+  +'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
+ sheets.forEach(function(s,i){ct+='<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';});
+ ct+='</Types>';
+ var rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+  +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+ var wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>';
+ sheets.forEach(function(s,i){wb+='<sheet name="'+esc(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';});
+ wb+='</sheets></workbook>';
+ var wbr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+ sheets.forEach(function(s,i){wbr+='<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';});
+ wbr+='<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+ var st='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+  +'<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts>'
+  +'<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'
+  +'<fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/><bgColor indexed="64"/></patternFill></fill></fills>'
+  +'<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+  +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+  +'<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+  +'<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf></cellXfs>'
+  +'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+ var files=[{name:'[Content_Types].xml',data:ct},{name:'_rels/.rels',data:rels},
+   {name:'xl/workbook.xml',data:wb},{name:'xl/_rels/workbook.xml.rels',data:wbr},{name:'xl/styles.xml',data:st}];
+ sheets.forEach(function(s,si){
+  var x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+   +'<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+   +'<sheetFormatPr defaultRowHeight="15"/><sheetData>';
+  s.rows.forEach(function(row,ri){
+   x+='<row r="'+(ri+1)+'"'+(ri===0?' ht="32" customHeight="1"':'')+'>';
+   row.forEach(function(v,ci){
+    if(v===null||v===undefined||v==='')return;
+    var ref=colName(ci+1)+(ri+1), sty=(ri===0?' s="1"':'');
+    if(ri>0&&typeof v==='number'&&isFinite(v)) x+='<c r="'+ref+'"'+sty+'><v>'+v+'</v></c>';
+    else x+='<c r="'+ref+'"'+sty+' t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+   });
+   x+='</row>';
+  });
+  x+='</sheetData></worksheet>';
+  files.push({name:'xl/worksheets/sheet'+(si+1)+'.xml',data:x});
+ });
+ return zip(files);
+}
+
+
+/* --- EuroSCORE II (Nashef 2012) --- */
+var ES_B0=-5.324537;
+function ccGault(){
+  var age=parseFloat(val('f6')), wt=parseFloat(val('f8')), cr=parseFloat(val('f76')), sex=val('f7');
+  if(!(age>0&&wt>0&&cr>0)) return null;
+  var cc=(140-age)*wt/(0.814*cr);
+  if(sex==='0. Nữ') cc*=0.85;
+  return cc;
+}
+function euroscore(){
+  var T=[], miss=[];
+  function need(k,label){ if(!val(k)){ miss.push(label); return false; } return true; }
+  var age=parseFloat(val('f6'));
+  if(!(age>0)) miss.push('Tuổi'); else T.push(['Tuổi '+age, 0.0285181*(age<=60?1:age-59)]);
+  var sex=val('f7');
+  if(!sex) miss.push('Giới tính'); else if(sex==='0. Nữ') T.push(['Giới nữ',0.2196434]);
+  if(need('f75','Đái tháo đường phụ thuộc insulin') && val('f75')==='1. Có') T.push(['Đái tháo đường phụ thuộc insulin',0.3542749]);
+  if(need('f17','Bệnh mạch máu ngoại biên') && val('f17')==='1. Có') T.push(['Bệnh mạch máu ngoài tim',0.5360268]);
+  if(need('f16','Bệnh phổi mạn') && val('f16')==='1. Có') T.push(['Bệnh phổi mạn',0.1886564]);
+  if(need('f79','Suy giảm vận động nặng') && val('f79')==='1. Có') T.push(['Suy giảm vận động nặng',0.2407181]);
+  var cc=ccGault(), dial=val('f78');
+  if(!dial) miss.push('Đang lọc máu định kỳ');
+  else if(dial==='1. Có') T.push(['Đang lọc máu định kỳ',0.6421508]);
+  else if(cc===null) miss.push('Creatinin máu trước mổ');
+  else if(cc<=50) T.push(['Thanh thải creatinin ≤50',0.8592256]);
+  else if(cc<=85) T.push(['Thanh thải creatinin 50–85',0.303553]);
+  if(need('f80','Viêm nội tâm mạc đang hoạt động') && val('f80')==='1. Có') T.push(['Viêm nội tâm mạc đang hoạt động',0.6194522]);
+  if(need('f81','Tình trạng nguy kịch trước mổ') && val('f81')==='1. Có') T.push(['Tình trạng nguy kịch trước mổ',1.086517]);
+  var ny=val('f21');
+  if(!ny) miss.push('Phân độ NYHA');
+  else if(ny==='2. II') T.push(['NYHA II',0.1070545]);
+  else if(ny==='3. III') T.push(['NYHA III',0.2958358]);
+  else if(ny==='4. IV') T.push(['NYHA IV',0.5597929]);
+  if(need('f82','Đau thắt ngực CCS độ 4') && val('f82')==='1. Có') T.push(['Đau thắt ngực CCS 4',0.2226147]);
+  var ef=parseFloat(val('f22'));
+  if(!(ef>0)) miss.push('LVEF');
+  else if(ef<=20) T.push(['LVEF ≤20% (rất kém)',0.9346919]);
+  else if(ef<=30) T.push(['LVEF 21–30% (kém)',0.8084096]);
+  else if(ef<=50) T.push(['LVEF 31–50% (trung bình)',0.3150652]);
+  if(need('f83','Nhồi máu cơ tim trong vòng 90 ngày') && val('f83')==='1. Có') T.push(['Nhồi máu cơ tim ≤90 ngày',0.1528943]);
+  var pa=parseFloat(val('f84'));
+  if(!(pa>0)) miss.push('Áp lực động mạch phổi tâm thu');
+  else if(pa>=55) T.push(['Áp lực ĐMP ≥55 mmHg',0.3491475]);
+  else if(pa>=31) T.push(['Áp lực ĐMP 31–55 mmHg',0.1788899]);
+  var ur=val('f30');
+  if(!ur) miss.push('Mức độ khẩn phẫu thuật');
+  else if(ur==='1. Bán cấp') T.push(['Mổ bán cấp',0.3174673]);
+  else if(ur==='2. Cấp cứu') T.push(['Mổ cấp cứu',0.7039121]);
+  else if(ur==='3. Cứu vãn') T.push(['Mổ cứu vãn',1.362947]);
+  var y=ES_B0; T.forEach(function(t){y+=t[1];});
+  var p=Math.exp(y)/(1+Math.exp(y))*100;
+  return {pct:p, y:y, terms:T, miss:miss, cc:cc};
+}
+
+/* ================= TRẠNG THÁI ================= */
+var KEY='poaf_lpp_collector_v1', TARGET=142;
+var SECS=['A','B','H','C','D','E','F','G'];
+var DB={cases:[],draft:null}, cur={}, curIdx=-1, unlocked=false, si=0;
+
+function load(){try{var r=localStorage.getItem(KEY);if(r)DB=JSON.parse(r);}catch(e){}
+  if(!DB.cases)DB.cases=[];}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){
+  toast('Không lưu được — hãy xuất sao lưu ngay');}}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.className='toast on';
+  clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},2800);}
+function val(k){return (cur[k]===undefined||cur[k]===null)?'':String(cur[k]).trim();}
+function setraw(k,v){cur[k]=v;}
+function depOK(f){return !f.dep || val(f.dep[0])===f.dep[1];}
+function fld(k){for(var i=0;i<FIELDS.length;i++)if(FIELDS[i].k===k)return FIELDS[i];}
+
+/* ---- tương thích hàm dùng chung với bản máy tính ---- */
+function setv(k,v){cur[k]=(v===undefined||v===null)?'':v;}
+
+/* ================= TÍNH TOÁN ================= */
+function calcBmi(){var w=parseFloat(val('f8')),h=parseFloat(val('f9'));
+  cur.f10=(w>0&&h>0)?(Math.round(w/Math.pow(h/100,2)*100)/100).toFixed(2):'';}
+function recompute(){calcBmi();
+  var cc=ccGault(); cur.f77=(cc===null)?'':(Math.round(cc*10)/10).toFixed(1);
+  var r=euroscore(); cur.f29=r.miss.length?'':(Math.round(r.pct*100)/100).toFixed(2); return r;}
+
+/* ================= DỰNG MÀN HÌNH ================= */
+function secFields(s){return FIELDS.filter(function(f){return f.s===s;});}
+function render(){
+  var s=SECS[si], fs=secFields(s);
+  document.getElementById('secTitle').textContent=SECT[s].t;
+  var n=fs.filter(depOK).filter(function(f){return f.t!=='calc'&&f.t!=='auto';});
+  var done=n.filter(function(f){return val(f.k)!=='';});
+  document.getElementById('secSub').textContent=
+    (curIdx>=0?'Sửa ca '+(val('f2')||'')+' · ':'')+'Mục '+(si+1)+'/'+SECS.length+' · '+done.length+'/'+n.length+' biến';
+  document.getElementById('progBar').style.width=((si+(n.length?done.length/n.length:1))/SECS.length*100)+'%';
+  document.getElementById('btnBack').disabled=(si===0);
+  document.getElementById('btnPrev').classList.toggle('hide',si===0);
+
+  var ch=''; SECS.forEach(function(x,i){
+    var xf=secFields(x).filter(depOK).filter(function(f){return f.req;});
+    var ok=xf.length&&xf.every(function(f){return val(f.k)!=='';});
+    ch+='<button class="chip'+(i===si?' on':(ok?' done':''))+'" onclick="goSec('+i+')">'
+      +SECT[x].t.split('.')[0]+'</button>';});
+  document.getElementById('steps').innerHTML=ch;
+
+  var h='<div class="sec-h"><h1>'+SECT[s].t+'</h1>'+(SECT[s].d?'<p>'+SECT[s].d+'</p>':'')+'</div>';
+  if(s==='F'&&!unlocked){ h+=lockHtml(); document.getElementById('body').innerHTML=h;
+    document.getElementById('btnNext').textContent='Tiếp tục'; scrollTop(); return; }
+  if(s==='H') h+='<div class="euro" id="euroBox"></div>';
+  fs.forEach(function(f){ h+=qHtml(f); });
+  if(s==='G') h+='<div style="height:6px"></div>';
+  document.getElementById('body').innerHTML=h;
+  if(s==='H') paintEuro();
+  var last=(si===SECS.length-1);
+  document.getElementById('btnNext').textContent=last?'Lưu ca này':'Tiếp tục';
+  document.getElementById('btnNext').className='nav '+(last?'n3':'n1');
+  scrollTop();
+}
+function scrollTop(){document.getElementById('body').scrollTop=0;}
+function qHtml(f){
+  if(!depOK(f))return '';
+  var v=val(f.k);
+  var h='<div class="q" id="q_'+f.k+'"><div class="lab">'+f.n
+    +(f.u?' <span class="u">('+f.u+')</span>':'')+(f.req?' <span class="rq">*</span>':'')+'</div>';
+  if(f.hint)h+='<div class="hint">'+f.hint+'</div>';
+  if(f.t==='sel'){
+    var yn=(f.o.length===2&&f.o[0].indexOf('Không')>0);
+    var cls=yn?'yn':('opts'+(f.o.length>3?'':''));
+    h+='<div class="'+cls+'">';
+    f.o.forEach(function(o,i){
+      var sel=(v===o), no=(yn&&i===0);
+      h+='<button class="opt'+(sel?' sel':'')+(sel&&no?' no':'')+'" onclick="pick(\''+f.k+'\','+i+')">'
+        +o.replace(/^\d+\.\s*/,'')+'</button>';});
+    h+='</div>';
+  } else if(f.t==='num'){
+    h+='<div class="unit-in"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="i_'+f.k
+      +'" value="'+v+'" oninput="typed(\''+f.k+'\',this.value)" placeholder="'+(f.min!==undefined?f.min+'–'+f.max:'')+'">'
+      +(f.u?'<span class="unit">'+f.u+'</span>':'')+'</div>';
+  } else if(f.t==='date'){
+    h+='<input type="date" id="i_'+f.k+'" value="'+v+'" onchange="typed(\''+f.k+'\',this.value)" oninput="typed(\''+f.k+'\',this.value)">';
+  } else if(f.t==='area'){
+    h+='<textarea id="i_'+f.k+'" oninput="typed(\''+f.k+'\',this.value)" placeholder="Không bắt buộc">'+v+'</textarea>';
+  } else if(f.t==='calc'||f.t==='auto'){
+    h+='<input type="text" readonly value="'+v+'" placeholder="tự tính">';
+  } else {
+    h+='<input type="text" id="i_'+f.k+'" value="'+v+'" oninput="typed(\''+f.k+'\',this.value)"'
+      +(f.k==='f2'?' autocapitalize="characters"':'')+'>';
+  }
+  h+='<div class="msg" id="m_'+f.k+'"></div></div>';
+  return h;
+}
+function pick(k,i){
+  var f=fld(k), o=f.o[i];
+  cur[k]=(val(k)===o)?'':o;
+  recompute();
+  var deps=FIELDS.some(function(x){return x.dep&&x.dep[0]===k;});
+  if(deps||k==='f7'||SECS[si]==='H'||k==='f21'||k==='f30') render();
+  else { paintOne(k); paintEuroIfVisible(); }
+  save();
+}
+function typed(k,v){ cur[k]=v; recompute(); paintEuroIfVisible();
+  if(k==='f8'||k==='f9'){paintCalc('f10');} if(k==='f76'){paintCalc('f77');}
+  paintCalc('f29'); validate(k); save(); }
+function paintOne(k){
+  var f=fld(k), box=document.getElementById('q_'+k); if(!box)return;
+  var btns=box.querySelectorAll('.opt'), v=val(k), yn=(f.o&&f.o.length===2&&f.o[0].indexOf('Không')>0);
+  f.o.forEach(function(o,i){ var b=btns[i]; if(!b)return;
+    b.className='opt'+(v===o?' sel'+(yn&&i===0?' no':''):''); });
+}
+function paintCalc(k){
+  var box=document.getElementById('q_'+k); if(!box)return;
+  var inp=box.querySelector('input[readonly]'); if(inp)inp.value=val(k);
+}
+function paintEuroIfVisible(){ if(SECS[si]==='H')paintEuro(); }
+function validate(k){
+  var f=fld(k), box=document.getElementById('q_'+k), m=document.getElementById('m_'+k);
+  if(!box)return true; box.classList.remove('err'); if(m)m.textContent='';
+  var v=val(k); if(!v||f.t!=='num')return true;
+  var x=parseFloat(v.replace(',','.'));
+  if(isNaN(x)){box.classList.add('err');m.textContent='Không phải số';return false;}
+  if(f.min!==undefined&&(x<f.min||x>f.max)){box.classList.add('err');
+    m.textContent='Ngoài khoảng hợp lý '+f.min+'–'+f.max;return false;}
+  return true;
+}
+function paintEuro(){
+  var el=document.getElementById('euroBox'); if(!el)return;
+  var r=euroscore(), cc=ccGault();
+  if(r.miss.length){ el.innerHTML='<div class="lab">EuroSCORE II</div><div class="v">—</div>'
+    +'<div class="miss">Còn thiếu: '+r.miss.join(' · ')+'</div>'; return; }
+  var p=Math.round(r.pct*100)/100;
+  var b=p<2?['eb1','Nguy cơ thấp']:(p<5?['eb2','Nguy cơ trung bình']:['eb3','Nguy cơ cao']);
+  el.innerHTML='<div class="lab">EuroSCORE II — tử vong nội viện dự đoán</div>'
+   +'<div class="v">'+p.toFixed(2)+'<small> %</small></div>'
+   +'<div class="band '+b[0]+'">'+b[1]+'</div>'
+   +'<div class="cc">Thanh thải creatinin '+(cc===null?'—':(Math.round(cc*10)/10)+' mL/phút')
+   +' · tổng hệ số β '+r.y.toFixed(4)+'</div>'
+   +'<details><summary>Xem các yếu tố đang được tính</summary><table>'
+   +'<tr><td>Hằng số mô hình</td><td>'+ES_B0.toFixed(4)+'</td></tr>'
+   +r.terms.map(function(t){return '<tr><td>'+t[0]+'</td><td>'+t[1].toFixed(4)+'</td></tr>';}).join('')
+   +'</table><div class="cc">Mổ tim lại · động mạch chủ ngực · mức độ nặng can thiệp luôn bằng 0 do tiêu chuẩn loại trừ.</div></details>';
+}
+function lockHtml(){
+  var miss=FIELDS.filter(function(f){return f.gate&&depOK(f)&&!val(f.k);}).map(function(f){return f.n;});
+  return '<div class="warn">Phần này bị khóa cho tới khi ghi xong kết cục. Theo mục 2.6.3, biên bản phẫu thuật chỉ được mở sau cùng để người trích xuất không biết ca thuộc nhóm nào trong lúc đánh giá POAF.</div>'
+   +(miss.length?'<div class="errb"><b>Còn thiếu:</b><br>• '+miss.join('<br>• ')+'</div>':'')
+   +'<div class="act"><button class="'+(miss.length?'a2':'a3')+'" onclick="unlockF()">'
+   +(miss.length?'Chưa đủ — quay lại điền tiếp':'Đã xong kết cục — mở biên bản phẫu thuật')+'</button></div>';
+}
+function unlockF(){
+  var miss=FIELDS.filter(function(f){return f.gate&&depOK(f)&&!val(f.k);});
+  if(miss.length){ goSec(SECS.indexOf(miss[0].s)); toast('Còn thiếu: '+miss[0].n); return; }
+  unlocked=true; cur._unlockedAt=new Date().toISOString(); save(); render();
+  toast('Đã mở phần trong mổ');
+}
+
+/* ================= ĐIỀU HƯỚNG ================= */
+function goSec(i){ if(i<0||i>=SECS.length)return; si=i; render(); }
+function prevSec(){ if(si>0){si--;render();} }
+function nextSec(){
+  var s=SECS[si];
+  var bad=secFields(s).filter(depOK).filter(function(f){return !validate(f.k);});
+  if(bad.length){ toast('Kiểm tra lại: '+bad[0].n); return; }
+  if(s==='F'&&!unlocked){ unlockF(); return; }
+  if(si<SECS.length-1){ si++; render(); } else saveCase();
+}
+
+/* ================= LƯU CA ================= */
+function nextStt(){var m=0;DB.cases.forEach(function(c){var n=parseInt(c.f1||0,10);if(n>m)m=n;});return m+1;}
+function save(){ if(curIdx<0){DB.draft={data:cur,unlocked:unlocked};persist();} }
+function newCase(){
+  cur={}; curIdx=-1; unlocked=false; si=0; DB.draft=null; persist();
+  cur.f1=String(nextStt()); cur.f5=new Date().toISOString().slice(0,10);
+  render(); closeSheet();
+}
+function saveCase(){
+  var errs=[];
+  FIELDS.forEach(function(f){
+    if(!depOK(f))return;
+    if(f.t==='num'&&val(f.k)){ var x=parseFloat(val(f.k).replace(',','.'));
+      if(isNaN(x)||(f.min!==undefined&&(x<f.min||x>f.max))) errs.push(f.n+': ngoài khoảng hợp lý'); }
+    if(f.req&&!val(f.k)) errs.push('Thiếu: '+f.n);
+  });
+  if(!unlocked) errs.push('Chưa mở phần F — thiếu biến LPP thì không xếp nhóm được');
+  DB.cases.forEach(function(c,i){ if(i!==curIdx&&c.f2&&c.f2===val('f2')) errs.push('Mã số "'+val('f2')+'" đã có ở ca khác'); });
+  if(errs.length){ showErrs(errs); return; }
+  recompute(); cur._savedAt=new Date().toISOString();
+  if(curIdx>=0){DB.cases[curIdx]=cur;toast('Đã cập nhật ca '+val('f2'));}
+  else {DB.cases.push(cur);toast('Đã lưu ca '+val('f2')+' — tổng '+DB.cases.length+' ca');}
+  DB.draft=null; persist(); newCase();
+}
+function showErrs(errs){
+  var f=errs[0], k=null;
+  FIELDS.forEach(function(x){ if(!k&&f.indexOf(x.n)>=0)k=x; });
+  var h='<div class="errb"><b>Chưa lưu được:</b><br>• '+errs.join('<br>• ')+'</div>';
+  document.getElementById('body').insertAdjacentHTML('afterbegin',h);
+  document.getElementById('body').scrollTop=0;
+  if(k){ toast('Nhấn để tới: '+k.n); setTimeout(function(){goSec(SECS.indexOf(k.s));},1400); }
+}
+function editCase(i){ cur=JSON.parse(JSON.stringify(DB.cases[i])); curIdx=i; unlocked=true; si=0;
+  render(); closeSheet(); }
+function delCase(i){
+  if(!confirm('Xóa hẳn ca '+(DB.cases[i].f2||'')+'? Không hoàn tác được.'))return;
+  DB.cases.splice(i,1); persist(); toast('Đã xóa'); openMenu();
+}
+
+/* ================= MÀN HÌNH PHỤ ================= */
+function sheet(title,sub,html){
+  var d=document.createElement('div'); d.className='sheet'; d.id='sheet';
+  d.innerHTML='<div class="top"><div class="top-r">'
+   +'<button class="back" onclick="closeSheet()">‹</button>'
+   +'<div style="flex:1;min-width:0"><h2>'+title+'</h2><div class="sub">'+sub+'</div></div>'
+   +'</div></div><div class="sheet-b">'+html+'</div>';
+  closeSheet(); document.body.appendChild(d);
+}
+function closeSheet(){var d=document.getElementById('sheet');if(d)d.remove();}
+function openMenu(){
+  var l=0,c=0; DB.cases.forEach(function(x){ if(x.f59==='1. Có')l++; else if(x.f59==='0. Không')c++; });
+  var h='<div class="big">'
+   +'<div class="mcard"><span>Nhóm LPP</span><b>'+l+'</b><div class="pb"><i style="width:'+Math.min(100,l/TARGET*100)+'%"></i></div></div>'
+   +'<div class="mcard"><span>Nhóm chứng</span><b>'+c+'</b><div class="pb"><i style="width:'+Math.min(100,c/TARGET*100)+'%"></i></div></div>'
+   +'</div>'
+   +'<div class="warn">Cần tối thiểu <b>'+TARGET+'</b> ca mỗi nhóm. Đã có <b>'+DB.cases.length+'</b> ca.</div>'
+   +'<div class="act">'
+   +'<button class="a3" onclick="newCase()">Nhập ca mới</button>'
+   +'<button class="a1" onclick="exportXlsx()">Xuất Excel ('+DB.cases.length+' ca)</button>'
+   +'<button class="a2" onclick="backup()">Tải file sao lưu</button>'
+   +'<button class="a2" onclick="document.getElementById(\'imp\').click()">Nạp lại từ sao lưu</button>'
+   +'<button class="a2" onclick="openGuide()">Hướng dẫn sử dụng</button>'
+   +'</div>'
+   +'<input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="restore(this)">';
+  if(DB.cases.length){
+    h+='<div style="font-size:12px;color:var(--grey3);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 9px">Danh sách ca đã nhập</div>';
+    DB.cases.slice().reverse().forEach(function(c){
+      var i=DB.cases.indexOf(c);
+      var tag=c.f59==='1. Có'?'<span class="tag tl">LPP</span>':(c.f59==='0. Không'?'<span class="tag tc">Chứng</span>':'<span class="tag tw">?</span>');
+      var tot=0,fi=0; FIELDS.forEach(function(f){ if(f.t==='auto'||f.t==='calc')return;
+        if(f.dep&&c[f.dep[0]]!==f.dep[1])return; tot++; if(c[f.k])fi++; });
+      h+='<div class="row"><div class="l" onclick="editCase('+i+')"><b>'+(c.f2||'(chưa có mã)')+'</b>'
+        +'<span>'+(c.f3||'')+' · '+(c.f6||'?')+' tuổi · POAF '+(c.f31==='1. Có'?'có':(c.f31==='0. Không'?'không':'?'))
+        +' · '+fi+'/'+tot+' biến</span></div>'+tag
+        +'<button style="font-size:20px;color:var(--grey3);padding:0 4px" onclick="delCase('+i+')">×</button></div>';
+    });
+  }
+  sheet('Bảng điều khiển', DB.cases.length+' ca đã lưu', h);
+}
+function openGuide(){
+  sheet('Hướng dẫn','Đọc một lần là đủ',
+   '<div class="card"><h3>Thứ tự nhập</h3><p>Đi lần lượt A → B → B₂ → C → D → E → F → G. Phần <b>F (biên bản phẫu thuật)</b> bị khóa cho tới khi ghi xong kết cục. Thời điểm mở khóa của từng ca được lưu lại làm bằng chứng cho biện pháp làm mù ở mục 2.6.3.</p></div>'
+   +'<div class="card"><h3>EuroSCORE II</h3><p>Tính tự động ở mục B₂. Chỉ nhập những yếu tố chưa có ở mục B. Nhấn “Xem các yếu tố đang được tính” để kiểm tra từng hệ số.</p><p>Ba yếu tố luôn bằng 0 do tiêu chuẩn loại trừ: mổ tim lại, phẫu thuật động mạch chủ ngực, mức độ nặng can thiệp.</p></div>'
+   +'<div class="card"><h3>Sao lưu — quan trọng nhất</h3><p>Dữ liệu nằm trong bộ nhớ Safari trên máy này. <b>Cuối mỗi buổi hãy bấm “Tải file sao lưu”</b> rồi lưu vào Files hoặc gửi lên Drive.</p><ul><li>Xóa dữ liệu Safari sẽ mất sạch.</li><li>Nếu mở app từ Files thay vì từ Màn hình chính, iOS có thể dọn bộ nhớ sớm hơn — càng phải sao lưu thường xuyên.</li></ul></div>'
+   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng 84 cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
+   +'<div class="card"><h3>Bảo mật</h3><p>Không nhập họ tên hay số hồ sơ. Chỉ dùng mã số nghiên cứu. Không có dữ liệu nào được gửi đi đâu — app chạy hoàn toàn ngoại tuyến.</p></div>'
+   +'<div class="card"><h3>Đề tài</h3><p><b>BSNT. Lê Thế Kỷ</b> · Ngoại lồng ngực, MS 147241106<br>Bộ môn Phẫu thuật Lồng ngực – Tim mạch, Đại học Y Dược TP. Hồ Chí Minh<br>Khoa Hồi sức – Phẫu thuật Tim, Bệnh viện Chợ Rẫy</p></div>');
+}
+
+/* ================= XUẤT ================= */
+function headerRow(){return FIELDS.map(function(f){return f.n+(f.u?'\n('+f.u+')':'');});}
+function caseRow(c){return FIELDS.map(function(f){var v=c[f.k];
+  if(v===undefined||v===null||v==='')return '';
+  if(f.t==='num'||f.t==='calc'||f.t==='auto'){var x=parseFloat(String(v).replace(',','.'));return isNaN(x)?v:x;}
+  return v;});}
+function fmtT(s){if(!s)return '—';var d=new Date(s);
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
+   +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function stamp(){var d=new Date();return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)
+  +'_'+('0'+d.getHours()).slice(-2)+('0'+d.getMinutes()).slice(-2);}
+function exportXlsx(){
+  if(!DB.cases.length){toast('Chưa có ca nào');return;}
+  var rows=[headerRow()]; DB.cases.forEach(function(c){rows.push(caseRow(c));});
+  var dict=[['Nhóm','Tên biến','Đơn vị','Giá trị / Mã hóa','Định nghĩa và lưu ý']];
+  FIELDS.forEach(function(f){dict.push([SECT[f.s].t,f.n,f.u||'',f.o?f.o.join(' · '):'',f.hint||'']);});
+  var l=0,c2=0; DB.cases.forEach(function(x){if(x.f59==='1. Có')l++;else if(x.f59==='0. Không')c2++;});
+  var meta=[['Thông tin xuất',''],['Thời điểm xuất',fmtT(new Date().toISOString())],
+    ['Nguồn','Nhập trên iPhone'],['Tổng số ca',DB.cases.length],['Nhóm LPP',l],['Nhóm chứng',c2],
+    ['Cỡ mẫu tối thiểu mỗi nhóm',TARGET],['',''],
+    ['Ghi nhận thứ tự làm mù','Thời điểm mở phần biên bản phẫu thuật'],['Mã số','Mở phần F lúc']];
+  DB.cases.forEach(function(x){meta.push([x.f2||'',x._unlockedAt?fmtT(x._unlockedAt):'(nhập trực tiếp)']);});
+  share(new Blob([buildXlsx([{name:'NhapLieu',rows:rows},{name:'TuDien',rows:dict},{name:'ThongTin',rows:meta}])],
+    {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+    'POAF_LPP_dulieu_'+stamp()+'.xlsx');
+}
+function backup(){ share(new Blob([JSON.stringify(DB)],{type:'application/json'}),'POAF_LPP_saoluu_'+stamp()+'.json'); }
+function share(blob,name){
+  var f=null;
+  try{ f=new File([blob],name,{type:blob.type}); }catch(e){}
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){
+    navigator.share({files:[f],title:name}).then(function(){toast('Đã chia sẻ '+name);}) 
+      .catch(function(){dl(blob,name);});
+  } else dl(blob,name);
+}
+function dl(blob,name){
+  var a=document.createElement('a'),u=URL.createObjectURL(blob);
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(u);a.remove();},600);
+  toast('Đã tạo '+name);
+}
+function restore(inp){
+  var f=inp.files[0]; if(!f)return; var r=new FileReader();
+  r.onload=function(){ try{ var o=JSON.parse(r.result); if(!o.cases)throw 0;
+      if(DB.cases.length&&!confirm('Đang có '+DB.cases.length+' ca. Nạp file này sẽ THAY THẾ toàn bộ. Tiếp tục?'))return;
+      DB=o; if(!DB.cases)DB.cases=[]; persist(); toast('Đã nạp '+DB.cases.length+' ca'); newCase();
+    }catch(e){ toast('File sao lưu không đọc được'); } };
+  r.readAsText(f); inp.value='';
+}
+
+/* ================= KHỞI ĐỘNG ================= */
+load();
+if(DB.draft&&DB.draft.data){ cur=DB.draft.data; unlocked=!!DB.draft.unlocked; curIdx=-1; si=0; render();
+  setTimeout(function(){toast('Đã khôi phục ca đang nhập dở');},600); }
+else newCase();
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+window.addEventListener('pagehide',save);
+document.addEventListener('gesturestart',function(e){e.preventDefault();});
+</script></body></html>
