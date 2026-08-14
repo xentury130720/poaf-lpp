@@ -185,6 +185,17 @@ html[data-theme="dark"] .q.f-todo .lab{color:#B48BDC}
  border-radius:12px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--grey)}
 .lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .lg1{background:#17876B}.lg2{background:#7B4FA8}.lg3{background:#C7D0DE}
+.idbox{background:#FFF8F0;border:1px solid #F0D9B8;border-left:4px solid #E0A32E;
+ border-radius:0 13px 13px 0;padding:13px 15px;margin-bottom:12px}
+html[data-theme="dark"] .idbox{background:#2A2213;border-color:#4A3A1A}
+.idb-h{font-family:var(--serif);font-weight:700;font-size:14.5px;color:#8A5A06;margin-bottom:4px}
+html[data-theme="dark"] .idb-h{color:#F0CE8A}
+.idb-n{font-size:12.5px;color:#6B5520;line-height:1.55}
+html[data-theme="dark"] .idb-n{color:#D8C49A}
+.idbox label{display:block;font-size:13px;font-weight:600;color:#6B5520;margin-top:10px}
+html[data-theme="dark"] .idbox label{color:#D8C49A}
+.mkcode{width:100%;margin-top:9px;background:var(--gold);color:#3A2B08;border-radius:11px;padding:13px;
+ font-size:15px;font-weight:700;border:0}
 .hide{display:none!important}
 </style>
 </head>
@@ -211,7 +222,7 @@ html[data-theme="dark"] .q.f-todo .lab{color:#B48BDC}
 var YN=["0. Không","1. Có"];
 var FIELDS=[
 {s:"A",k:"f1",n:"STT",t:"auto"},
-{s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"KHÔNG nhập họ tên hay số hồ sơ"},
+{s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"Dạng CR26-001: CR là Chợ Rẫy, 26 là năm mổ, 001 là số thứ tự trong năm."},
 {s:"A",k:"f3",n:"Ngày phẫu thuật",t:"date",req:1},
 {s:"F",k:"f4",n:"Phẫu thuật viên chính (mã hóa)",t:"txt",req:1,hint:"Đọc từ biên bản phẫu thuật, mã hóa PTV1, PTV2, PTV3… — KHÔNG ghi tên thật"},
 {s:"A",k:"f5",n:"Ngày thu thập",t:"date"},
@@ -574,6 +585,7 @@ function render(){
   if(s==='F'&&!unlocked){ h+=lockHtml(); document.getElementById('body').innerHTML=h;
     document.getElementById('btnNext').textContent='Tiếp tục'; scrollTop(); return; }
   if(s==='S') h+=scrBanner();
+  if(s==='A') h+=idBlock();
   if(s==='H') h+='<div class="euro" id="euroBox"></div>';
   fs.forEach(function(f){ h+=qHtml(f); });
   if(s==='G') h+=reviewHtml();
@@ -623,6 +635,7 @@ function qHtml(f){
     h+='<input type="text" id="i_'+f.k+'" value="'+v+'" oninput="typed(\''+f.k+'\',this.value)"'
       +(f.k==='f2'?' autocapitalize="characters"':'')+'>';
   }
+  if(f.k==='f2') h+='<button class="mkcode" onclick="genCode()">Tự tạo mã theo năm mổ</button>';
   h+='<div class="msg" id="m_'+f.k+'"></div></div>';
   return h;
 }
@@ -925,13 +938,15 @@ function renderRows(){
     if(FMODE==='inc'&&st.done&&!st.warn)return false;
     if(FMODE==='poaf'&&c.f31!=='1. Có')return false;
     if(!q)return true;
-    return [(c.f2||''),(c.f3||''),(c.f4||''),(c.f6||'')].join(' ').toLowerCase().indexOf(q)>=0;
+    return [(c.f2||''),(c._name||''),(c._rec||''),(c.f3||''),(c.f4||''),(c.f6||'')].join(' ').toLowerCase().indexOf(q)>=0;
   }).reverse();
   if(!list.length){ el.innerHTML='<div class="card"><p>Không có ca nào khớp.</p></div>'; return; }
   el.innerHTML=list.map(function(o){
     var c=o.c, st=caseStats(c);
-    var tag=c.f59==='1. Có'?'<span class="tag tl">LPP</span>':(c.f59==='0. Không'?'<span class="tag tc">Chứng</span>':'<span class="tag tw">?</span>');
+    var tag=c.f97==='Loại trừ'?'<span class="tag" style="background:var(--soft);color:var(--ink3)">Loại trừ</span>'
+      :(c.f59==='1. Có'?'<span class="tag tl">LPP</span>':(c.f59==='0. Không'?'<span class="tag tc">Chứng</span>':'<span class="tag tw">?</span>'));
     return '<div class="row"><div class="l" onclick="editCase('+o.i+')"><b>'+(c.f2||'(chưa có mã)')
+     +(c._name?' · '+c._name:'')
      +(st.warn?' <span style="color:var(--gold-d)">⚠︎'+st.warn+'</span>':'')+'</b>'
      +'<span>'+(c.f3||'')+' · '+(c.f6||'?')+' tuổi · POAF '
      +(c.f31==='1. Có'?'có':(c.f31==='0. Không'?'không':'?'))
@@ -957,6 +972,7 @@ function openMenu(){
    +'<button class="a3" onclick="newCase()">Nhập ca mới</button>'
    +'<button class="a1" onclick="exportXlsx()">Xuất Excel ('+DB.cases.length+' ca)</button>'
    +'<button class="a2" onclick="backup()">Tải file sao lưu</button>'
+   +'<button class="a2" onclick="exportLink()">Xuất danh sách nối mã (có họ tên)</button>'
    +'<button class="a2" onclick="document.getElementById(\'imp\').click()">Nạp file sao lưu</button>'
    +'<button class="a2" onclick="cycleTheme()">Giao diện: '+themeName()+'</button>'
    +'<button class="a2" onclick="renameDevice()">Kho dữ liệu: '+deviceLabel()+'</button>'
@@ -965,7 +981,7 @@ function openMenu(){
    +'</div>'
    +'<input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="restore(this)">';
   if(DB.cases.length){
-    h+='<input class="srch" placeholder="Tìm theo mã số, ngày mổ, PTV, tuổi" value="'+FQ+'" oninput="setFQ(this.value)">'
+    h+='<input class="srch" placeholder="Tìm theo tên, mã số, số hồ sơ, ngày mổ" value="'+FQ+'" oninput="setFQ(this.value)">'
      +'<div class="filt">'
      +[['all','Tất cả '+DB.cases.length],['lpp','LPP '+l],['ctl','Chứng '+c],['exc','Loại trừ '+nex],['poaf','Có POAF'],['inc','Cần xem lại '+inc]]
        .map(function(f){return '<button class="fchip'+(FMODE===f[0]?' on':'')+'" onclick="setFM(\''+f[0]+'\')">'+f[1]+'</button>';}).join('')
@@ -1102,6 +1118,59 @@ function dl(blob,name){
   a.href=u;a.download=name;document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(u);a.remove();},600);
   toast('Đã tạo '+name);
+}
+
+
+/* ============ ĐỊNH DANH — CHỈ LƯU TRÊN MÁY NÀY ============ */
+function idBlock(){
+  return '<div class="idbox"><div class="idb-h">Định danh người bệnh</div>'
+   +'<div class="idb-n">Hai ô này <b>chỉ lưu trên máy này</b>, không bao giờ vào file Excel phân tích. '
+   +'Muốn lấy ra thì dùng nút <b>Xuất danh sách nối mã</b> trong bảng điều khiển.</div>'
+   +'<label for="pName">Họ và tên người bệnh</label>'
+   +'<input type="text" id="pName" autocomplete="off" value="'+(cur._name||'')+'" oninput="idIn(\'_name\',this.value)">'
+   +'<label for="pRec">Số hồ sơ bệnh án</label>'
+   +'<input type="text" id="pRec" autocomplete="off" value="'+(cur._rec||'')+'" oninput="idIn(\'_rec\',this.value)">'
+   +'</div>';
+}
+function idIn(k,v){ cur[k]=v; save(); }
+
+/* ============ SINH MÃ SỐ NGHIÊN CỨU ============ */
+function yy(dstr){
+  var m=String(dstr||'').match(/^(\d{4})-/); if(m) return m[1].slice(-2);
+  return String(new Date().getFullYear()).slice(-2);
+}
+function makeCode(){
+  var y=yy(val('f3')), max=0;
+  DB.cases.forEach(function(c,i){
+    if(i===curIdx) return;
+    var m=String(c.f2||'').match(/^CR(\d{2})-(\d+)$/);
+    if(m&&m[1]===y){ var n=parseInt(m[2],10); if(n>max)max=n; }
+  });
+  return 'CR'+y+'-'+('00'+(max+1)).slice(-3);
+}
+function genCode(){
+  if(!val('f3')){ toast('Điền ngày phẫu thuật trước để mã có đúng năm'); return; }
+  cur.f2=makeCode(); recompute(); save(); render();
+  toast('Đã tạo mã '+cur.f2);
+}
+
+/* ============ DANH SÁCH NỐI MÃ ============ */
+function linkRows(){
+  var rows=[['Mã số nghiên cứu','Họ và tên','Số hồ sơ bệnh án','Ngày phẫu thuật','Kết luận sàng lọc']];
+  DB.cases.forEach(function(c){ rows.push([c.f2||'',c._name||'',c._rec||'',c.f3||'',c.f97||'']); });
+  return rows;
+}
+function exportLink(){
+  if(!DB.cases.length){ toast('Chưa có ca nào'); return; }
+  var n=DB.cases.filter(function(c){return c._name||c._rec;}).length;
+  if(!confirm('File này CHỨA HỌ TÊN và SỐ HỒ SƠ của '+n+' người bệnh.\n\nChỉ dùng để tra cứu. Không để chung với dữ liệu nghiên cứu, không gửi cho ai.\n\nTiếp tục?')) return;
+  var warn=[['CẢNH BÁO',''],['','File này chứa thông tin định danh người bệnh.'],
+    ['','Cất ở nơi riêng, không để chung với file phân tích.'],
+    ['','Không gửi qua email hay ứng dụng nhắn tin.'],['',''],
+    ['Người lập','BSNT. Lê Thế Kỷ'],['Thời điểm xuất',fmtT(new Date().toISOString())],['Số ca',DB.cases.length]];
+  share(new Blob([buildXlsx([{name:'CanhBao',rows:warn},{name:'DanhSachNoiMa',rows:linkRows()}])],
+    {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+    'RIENG_TU_danh_sach_noi_ma_'+stamp()+'.xlsx');
 }
 
 /* ============ NHÃN THIẾT BỊ ============ */
