@@ -768,7 +768,7 @@ function crossChecks(c){
     ['f37','f38','f39','f40','f41'].forEach(function(k){
       if(v(k)==='1. Có') W.push([k,'Ghi không có POAF nhưng lại có điều trị rung nhĩ.']); });
   }
-  if(v('f44')==='0. Không' && v('f46') && v('f46')!=='0. Không tràn dịch/không áp dụng')
+  if(v('f44')==='0. Không' && v('f46') && v('f46').indexOf('0. Không tràn dịch')!==0)
     W.push(['f46','Ghi không tràn dịch màng tim nhưng lại có vị trí tràn dịch.']);
   if(v('f44')==='0. Không' && v('f47')==='1. Có')
     W.push(['f47','Không tràn dịch nhưng lại cần can thiệp dẫn lưu.']);
