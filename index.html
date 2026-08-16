@@ -208,6 +208,11 @@ table.pv td.mt{background:var(--blue-l2)}
 .tag.tdemo{background:var(--gold);color:#3A2B08}
 .idb-demo{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink2);line-height:1.35}
 .idb-demo input{width:21px;height:21px;flex:none;margin:0}
+
+.convrow{display:flex;gap:8px;align-items:stretch;margin-top:2px}
+.convrow .unit-in{flex:1;min-width:0}
+.convrow .unit-in.alt input{background:var(--soft);border-style:dashed}
+.convnote{font-size:12px;color:var(--ink3);margin-top:5px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -231,14 +236,14 @@ table.pv td.mt{background:var(--blue-l2)}
 <script>
 /* --- Danh mục 96 biến --- */
 var YN=["0. Không","1. Có"];
-/* Ten chi hien tren may nay de chon dung nguoi. Xuat Excel chi lay phan ma PTVn. */
-var PTV=["PTV1 (An)","PTV2 (Tịnh)","PTV3 (Phát)","PTV4 (Hải)","PTV5 (Trung)"];
+/* Ma phau thuat vien. Bang doi chieu ten giu rieng, khong nam trong ma nguon. */
+var PTV=["PTV1","PTV2","PTV3","PTV4","PTV5"];
 function ptvCode(v){ return String(v==null?"":v).replace(/\s*\(.*\)\s*$/,""); }
 var FIELDS=[
 {s:"A",k:"f1",n:"STT",t:"auto"},
 {s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"Tự điền khi nhập ngày phẫu thuật. Muốn đổi thì chỉ cần gõ số thứ tự (ví dụ 7) rồi chạm ra ngoài — app tự thành CR26-007."},
 {s:"A",k:"f3",n:"Ngày phẫu thuật",t:"date",req:1},
-{s:"F",k:"f4",n:"Phẫu thuật viên chính (mã hóa)",t:"sel",o:PTV,req:1,hint:"Tên trong ngoặc chỉ hiện trên máy này để chọn cho đúng. File Excel chỉ xuất PTV1–PTV5, KHÔNG kèm tên."},
+{s:"F",k:"f4",n:"Phẫu thuật viên chính (mã hóa)",t:"sel",o:PTV,req:1,hint:"Đối chiếu tên với mã theo bảng riêng của nghiên cứu viên. Không ghi tên thật vào đây."},
 {s:"A",k:"f5",n:"Ngày thu thập",t:"date"},
 {s:"B",k:"f6",n:"Tuổi",u:"năm",t:"num",min:18,max:100,req:1},
 {s:"B",k:"f7",n:"Giới tính",t:"sel",o:["0. Nữ","1. Nam"],req:1},
@@ -262,7 +267,7 @@ var FIELDS=[
 {s:"B",k:"f24",n:"Số nhánh ĐMV tổn thương",t:"sel",o:["1. Một","2. Hai","3. Ba nhánh"],hint:"≥50% thân chung hoặc ≥70% nhánh khác"},
 {s:"B",k:"f25",n:"Tổn thương thân chung",t:"sel",o:YN,hint:"Hẹp ≥50% đường kính lòng mạch"},
 {s:"B",k:"f100",n:"Tổn thương động mạch mũ (LCX)",t:"sel",o:YN,hint:"Hẹp ≥70% LCX hoặc nhánh chính của nó"},
-{s:"B",k:"f26",n:"Hemoglobin trước mổ",u:"g/L",t:"num",min:40,max:200,dec:0},
+{s:"B",k:"f26",n:"Hemoglobin trước mổ",u:"g/L",t:"num",min:40,max:200,dec:0,conv:["g/dL",10]},
 {s:"B",k:"f27",n:"Kali máu trước mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2,hint:"Hạ kali khi <3,5"},
 {s:"B",k:"f28",n:"Chẹn beta trước mổ",t:"sel",o:YN},
 {s:"B",k:"f101",n:"Statin trước mổ",t:"sel",o:YN,hint:"Đang dùng statin lúc nhập viện — tách riêng khỏi biến rối loạn lipid máu"},
@@ -281,10 +286,10 @@ var FIELDS=[
 {s:"D",k:"f40",n:"Sốc điện chuyển nhịp",t:"sel",o:YN,dep:["f31","1. Có"]},
 {s:"D",k:"f41",n:"Chống đông cho POAF",t:"sel",o:YN,dep:["f31","1. Có"]},
 {s:"D",k:"f42",n:"Kali máu sau mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2},
-{s:"D",k:"f43",n:"Magie máu sau mổ",u:"mmol/L",t:"num",min:0.3,max:2,dec:2,hint:"Hạ magie khi <0,7"},
-{s:"D",k:"f103",n:"Canxi máu sau mổ (giờ 0)",u:"mmol/L",t:"num",min:1.5,max:3,dec:3,hint:"Canxi toàn phần ngay sau kết thúc mổ · ngưỡng nguy cơ <1,155"},
+{s:"D",k:"f43",n:"Magie máu sau mổ",u:"mmol/L",t:"num",min:0.3,max:2,dec:2,hint:"Hạ magie khi <0,7",conv:["mg/dL",0.4114]},
+{s:"D",k:"f103",n:"Canxi máu sau mổ (giờ 0)",u:"mmol/L",t:"num",min:1.5,max:3,dec:3,hint:"Canxi toàn phần ngay sau kết thúc mổ · ngưỡng nguy cơ <1,155",conv:["mg/dL",0.2495]},
 {s:"D",k:"f104",n:"Bạch cầu sau mổ",u:"G/L",t:"num",min:1,max:60,dec:1,hint:"Công thức máu trong 24 giờ đầu"},
-{s:"D",k:"f105",n:"CRP sau mổ",u:"mg/L",t:"num",min:0,max:500,dec:1,hint:"Xét nghiệm sớm nhất sau mổ · không có thì bỏ trống"},
+{s:"D",k:"f105",n:"CRP sau mổ",u:"mg/L",t:"num",min:0,max:500,dec:1,hint:"Xét nghiệm sớm nhất sau mổ · không có thì bỏ trống",conv:["mg/dL",10]},
 {s:"E",k:"f44",n:"Tràn dịch màng tim sau mổ",t:"sel",o:YN,req:1,gate:1},
 {s:"E",k:"f106",n:"Ngày hậu phẫu làm siêu âm tim",u:"ngày",t:"num",min:0,max:60,dec:0,hint:"LẦN ĐẦU sau mổ · ngày mổ = ngày 0 · dùng để kiểm soát sai lệch phát hiện"},
 {s:"E",k:"f107",n:"Số lần siêu âm tim sau mổ",u:"lần",t:"num",min:0,max:20,dec:0},
@@ -322,7 +327,7 @@ var FIELDS=[
 {s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:96,dec:0,dep:["f72","1. Có"]},
 {s:"G",k:"f74",n:"Ghi chú",t:"area"},
 {s:"H",k:"f75",n:"Đái tháo đường phụ thuộc insulin",t:"sel",o:YN,hint:"Đang điều trị bằng insulin tại thời điểm phẫu thuật"},
-{s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4"},
+{s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4",conv:["mg/dL",88.4]},
 {s:"H",k:"f77",n:"Độ thanh thải creatinin",u:"mL/phút",t:"calc",hint:"Tự tính theo Cockcroft–Gault từ tuổi, cân nặng, giới, creatinin"},
 {s:"H",k:"f78",n:"Đang lọc máu định kỳ",t:"sel",o:YN,hint:"Bất kể độ thanh thải creatinin"},
 {s:"H",k:"f79",n:"Suy giảm vận động nặng",t:"sel",o:YN,hint:"Do bệnh thần kinh hoặc cơ xương khớp, ảnh hưởng nặng tới sinh hoạt hằng ngày"},
@@ -668,9 +673,16 @@ function qHtml(f){
         +o.replace(/^\d+\.\s*/,'')+'</button>';});
     h+='</div>';
   } else if(f.t==='num'){
-    h+='<div class="unit-in"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="i_'+f.k
+    var main='<div class="unit-in"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="i_'+f.k
       +'" value="'+v+'" oninput="typed(\''+f.k+'\',this.value)" placeholder="'+(f.min!==undefined?f.min+'–'+f.max:'')+'">'
       +(f.u?'<span class="unit">'+f.u+'</span>':'')+'</div>';
+    if(f.conv){
+      h+='<div class="convrow">'+main
+       +'<div class="unit-in alt"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="alt_'+f.k
+       +'" value="'+altOf(f,v)+'" oninput="altTyped(\''+f.k+'\',this.value)" placeholder="hoặc nhập ở đây">'
+       +'<span class="unit">'+f.conv[0]+'</span></div></div>'
+       +'<div class="convnote">Ô trái tính bằng <b>'+f.u+'</b> — đây là số được lưu. Ô phải tính bằng <b>'+f.conv[0]+'</b> nếu phiếu xét nghiệm ghi theo đơn vị đó. Nhập ô nào cũng được, ô kia tự đổi.</div>';
+    } else h+=main;
   } else if(f.t==='date'){
     h+='<input type="date" id="i_'+f.k+'" value="'+v+'" onchange="typed(\''+f.k+'\',this.value)" oninput="typed(\''+f.k+'\',this.value)">';
   } else if(f.t==='area'){
@@ -707,7 +719,28 @@ function jumpNext(k){
     }
   }
 }
-function typed(k,v){ cur[k]=v;
+function altOf(f,v){
+  if(!f||!f.conv) return '';
+  var x=parseFloat(String(v).replace(',','.'));
+  return isNaN(x) ? '' : String(Math.round(x/f.conv[1]*1000)/1000);
+}
+function paintAlt(k){
+  var f=fld(k); if(!f||!f.conv) return;
+  var a=document.getElementById('alt_'+k); if(!a) return;
+  if(document.activeElement===a) return;
+  a.value=altOf(f,val(k));
+}
+function altTyped(k,v){
+  var f=fld(k); if(!f||!f.conv) return;
+  var x=parseFloat(String(v).replace(',','.'));
+  var out='';
+  if(!isNaN(x)){ var y=x*f.conv[1]; out = f.dec ? y.toFixed(f.dec) : String(Math.round(y)); }
+  cur[k]=out;
+  var e=document.getElementById('i_'+k); if(e) e.value=out;
+  recompute(); paintCalc('f29'); validate(k); paintFieldStates(); save();
+  clearTimeout(window._ft); window._ft=setTimeout(paintFlags,450);
+}
+function typed(k,v){ cur[k]=v; paintAlt(k);
   if(k==='f3'&&v&&!String(cur.f2||'').trim()){
     cur.f2=makeCode();
     var _e2=document.getElementById('i_f2'); if(_e2)_e2.value=cur.f2;
