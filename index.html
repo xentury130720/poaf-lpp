@@ -563,7 +563,24 @@ var SECS=['S','A','B','H','C','D','E','F','G'];
 var DB={cases:[],draft:null}, cur={}, curIdx=-1, unlocked=false, si=0;
 
 function load(){try{var r=localStorage.getItem(KEY);if(r)DB=JSON.parse(r);}catch(e){}
-  if(!DB.cases)DB.cases=[];}
+  if(!DB.cases)DB.cases=[]; if(!DB.log)DB.log=[]; if(!DB.trash)DB.trash=[];}
+/* ============ NHAT KY THAO TAC ============ */
+var ACT={create:'Tạo ca',edit:'Sửa ca',del:'Xóa ca',restore:'Khôi phục',unlockF:'Mở mục F',purge:'Xóa ca mẫu'};
+function allCases(){ return DB.cases.concat(DB.trash||[]); }
+function isOutcomeK(k){ var f=fld(k); return !!f && (f.s==='C'||f.s==='E'); }
+function diffCase(a,b){
+  var out=[];
+  FIELDS.forEach(function(f){
+    var x=(a&&a[f.k]!=null)?String(a[f.k]):'', y=(b&&b[f.k]!=null)?String(b[f.k]):'';
+    if(x!==y) out.push([f.k,f.n,x,y]);
+  });
+  return out;
+}
+function logAdd(act,code,chg,note){
+  if(!DB.log)DB.log=[];
+  DB.log.push({t:new Date().toISOString(),act:act,code:code||'',dev:DB.device||'',chg:chg&&chg.length?chg:null,note:note||''});
+  if(DB.log.length>3000) DB.log=DB.log.slice(-3000);
+}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){
   toast('Không lưu được — hãy xuất sao lưu ngay');}}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.className='toast on';
@@ -767,7 +784,7 @@ function lockHtml(){
 function unlockF(){
   var miss=FIELDS.filter(function(f){return f.gate&&depOK(f)&&!val(f.k);});
   if(miss.length){ goSec(SECS.indexOf(miss[0].s)); toast('Còn thiếu: '+miss[0].n); return; }
-  unlocked=true; cur._unlockedAt=new Date().toISOString(); save(); render();
+  unlocked=true; cur._unlockedAt=new Date().toISOString(); logAdd('unlockF',val('f2'),null,''); persist(); save(); render();
   toast('Đã mở phần trong mổ');
 }
 
@@ -897,7 +914,7 @@ function nextSec(){
 }
 
 /* ================= LƯU CA ================= */
-function nextStt(){var m=0;DB.cases.forEach(function(c){var n=parseInt(c.f1||0,10);if(n>m)m=n;});return m+1;}
+function nextStt(){var m=0;allCases().forEach(function(c){var n=parseInt(c.f1||0,10);if(n>m)m=n;});return m+1;}
 function save(){ if(curIdx<0){DB.draft={data:cur,unlocked:unlocked};persist();} }
 function newCase(){
   cur={}; curIdx=-1; unlocked=false; si=0; DB.draft=null; persist();
@@ -922,8 +939,13 @@ function saveCase(){
   DB.cases.forEach(function(c,i){ if(i!==curIdx&&c.f2&&c.f2===val('f2')) errs.push('Mã số "'+val('f2')+'" đã có ở ca khác'); });
   if(errs.length){ showErrs(errs); return; }
   recompute(); cur._savedAt=new Date().toISOString();
-  if(curIdx>=0){DB.cases[curIdx]=cur;toast('Đã cập nhật ca '+val('f2'));}
-  else {DB.cases.push(cur);toast(sc.verdict==='Loại trừ'
+  if(curIdx>=0){
+    var oldc=DB.cases[curIdx], chg=diffCase(oldc,cur);
+    var risky = !!cur._unlockedAt && chg.some(function(d){return isOutcomeK(d[0]);});
+    DB.cases[curIdx]=cur;
+    if(chg.length) logAdd('edit',val('f2'),chg,risky?'Sửa biến kết cục SAU khi đã mở mục F':'');
+    toast('Đã cập nhật ca '+val('f2'));}
+  else {DB.cases.push(cur);logAdd('create',val('f2'),null,'');toast(sc.verdict==='Loại trừ'
     ? ('Đã ghi ca loại trừ '+val('f2'))
     : ('Đã lưu ca '+val('f2')+' — '+included().length+' ca nhận vào'));}
   DB.draft=null; persist(); newCase();
@@ -939,8 +961,43 @@ function showErrs(errs){
 function editCase(i){ cur=JSON.parse(JSON.stringify(DB.cases[i])); curIdx=i; unlocked=true; si=0;
   render(); closeSheet(); }
 function delCase(i){
-  if(!confirm('Xóa hẳn ca '+(DB.cases[i].f2||'')+'? Không hoàn tác được.'))return;
-  DB.cases.splice(i,1); persist(); toast('Đã xóa'); openMenu();
+  var c=DB.cases[i];
+  if(!confirm('Xóa ca '+(c.f2||'')+'?\n\nCa được chuyển vào thùng rác — vẫn khôi phục được và vẫn nằm trong nhật ký.'))return;
+  if(!DB.trash)DB.trash=[];
+  c._deletedAt=new Date().toISOString(); DB.trash.push(c); DB.cases.splice(i,1);
+  logAdd('del',c.f2,null,c._demo?'ca mẫu':''); persist(); toast('Đã chuyển vào thùng rác'); openMenu();
+}
+function restoreCase(i){
+  var c=DB.trash[i]; if(!c)return;
+  delete c._deletedAt; DB.cases.push(c); DB.trash.splice(i,1);
+  logAdd('restore',c.f2,null,''); persist(); toast('Đã khôi phục '+(c.f2||'')); openMenu();
+}
+function openTrash(){
+  var T=DB.trash||[];
+  if(!T.length){ toast('Thùng rác trống'); return; }
+  var h='<div class="card"><h3>'+T.length+' ca đã xóa</h3><p style="color:var(--ink3);font-size:13px">Ca trong thùng rác không vào thống kê và không vào file Excel, nhưng mã số của chúng không bị cấp lại.</p></div>';
+  h+=T.map(function(c,i){
+    return '<div class="row"><div class="l"><b>'+(c.f2||'(chưa có mã)')+(c._demo?' · MẪU':'')+'</b>'
+     +'<span>'+(c.f3||'')+' · xóa lúc '+fmtT(c._deletedAt)+'</span></div>'
+     +'<button class="a3" style="padding:6px 12px;font-size:13px" onclick="restoreCase('+i+')">Khôi phục</button></div>';
+  }).join('');
+  sheet('Thùng rác', T.length+' ca', h);
+}
+function openLog(){
+  var L=(DB.log||[]).slice().reverse();
+  if(!L.length){ toast('Nhật ký còn trống'); return; }
+  var h='<div class="card"><h3>'+L.length+' thao tác</h3><p style="color:var(--ink3);font-size:13px">Nhật ký được xuất kèm file Excel ở sheet <b>NhatKy</b>. Mục màu đỏ là lần sửa biến kết cục sau khi đã mở biên bản phẫu thuật.</p></div>';
+  h+=L.map(function(e){
+    var risky=!!e.note && e.note.indexOf('SAU khi')>=0;
+    var x='<div class="'+(risky?'errb':'card')+'" style="margin-bottom:8px">'
+     +'<b>'+(ACT[e.act]||e.act)+(e.code?' · '+e.code:'')+'</b>'
+     +'<div style="color:var(--ink3);font-size:12px;margin-top:2px">'+fmtT(e.t)+(e.dev?' · '+e.dev:'')+'</div>';
+    if(e.note) x+='<div style="font-size:13px;margin-top:4px"><b>'+esc(e.note)+'</b></div>';
+    if(e.chg) x+='<div style="font-size:12px;margin-top:5px;line-height:1.55">'+e.chg.map(function(d){
+      return esc(d[1])+': '+(d[2]===''?'(trống)':esc(d[2]))+' → '+(d[3]===''?'(trống)':esc(d[3]));}).join('<br>')+'</div>';
+    return x+'</div>';
+  }).join('');
+  sheet('Nhật ký thao tác', L.length+' bản ghi', h);
 }
 
 /* ================= MÀN HÌNH PHỤ ================= */
@@ -1015,6 +1072,8 @@ function openMenu(){
    +'<button class="a2" onclick="renameDevice()">Kho dữ liệu: '+deviceLabel()+'</button>'
    +'<button class="a2" onclick="openGuide()">Hướng dẫn sử dụng</button>'
    +'<button class="a2" onclick="openVars()">Danh mục biến — kiểm tra còn thiếu gì</button>'
+   +'<button class="a2" onclick="openLog()">Nhật ký thao tác ('+((DB.log||[]).length)+')</button>'
+   +((DB.trash||[]).length?'<button class="a2" onclick="openTrash()">Thùng rác ('+DB.trash.length+' ca)</button>':'')
    +(demoCases().length?'<button class="a2" onclick="purgeDemo()">Xóa '+demoCases().length+' ca mẫu</button>':'')
    +'</div>'
    +'<input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="restore(this)">';
@@ -1138,8 +1197,14 @@ function exportXlsx(){
     ['Bị loại trừ',excluded().length],['Được đưa vào nghiên cứu',included().length],['',''],
     ['Nhóm LPP',l],['Nhóm chứng',c2],['',''],['LÝ DO LOẠI TRỪ','Số ca']];
   Object.keys(reasons).forEach(function(k){ flow.push([k,reasons[k]]); });
+  var lg=[['Thời điểm','Thao tác','Mã số','Kho dữ liệu','Biến thay đổi','Ghi chú']];
+  (DB.log||[]).forEach(function(e){
+    lg.push([fmtT(e.t),ACT[e.act]||e.act,e.code||'',e.dev||'',
+      e.chg?e.chg.map(function(d){return d[1]+': '+(d[2]||'(trống)')+' → '+(d[3]||'(trống)');}).join(' | '):'',
+      e.note||'']);
+  });
   share(new Blob([buildXlsx([{name:'NhapLieu',rows:rows},{name:'SangLoc',rows:scr},
-    {name:'SoDoDongChay',rows:flow},{name:'TuDien',rows:dict},{name:'ThongTin',rows:meta}])],
+    {name:'SoDoDongChay',rows:flow},{name:'TuDien',rows:dict},{name:'ThongTin',rows:meta},{name:'NhatKy',rows:lg}])],
     {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
     'POAF_LPP_dulieu_'+stamp()+'.xlsx');
 }
@@ -1196,7 +1261,9 @@ function purgeDemo(){
   var n=demoCases().length;
   if(!n){ toast('Không có ca mẫu nào'); return; }
   if(!confirm('Xóa hẳn '+n+' ca mẫu? Không hoàn tác được.\n\nCác ca thật không bị ảnh hưởng.')) return;
-  DB.cases=DB.cases.filter(isReal); persist(); toast('Đã xóa '+n+' ca mẫu'); openMenu();
+  demoCases().forEach(function(c){ c._deletedAt=new Date().toISOString(); DB.trash.push(c); });
+  DB.cases=DB.cases.filter(isReal); logAdd('purge','',null,n+' ca mẫu');
+  persist(); toast('Đã xóa '+n+' ca mẫu'); openMenu();
 }
 function backup(){
   deviceLabel();
@@ -1246,8 +1313,8 @@ function yy(dstr){
 }
 function makeCode(){
   var y=yy(val('f3')), max=0;
-  DB.cases.forEach(function(c,i){
-    if(i===curIdx) return;
+  allCases().forEach(function(c){
+    if(curIdx>=0 && c===DB.cases[curIdx]) return;
     var m=String(c.f2||'').match(/^CR(\d{2})-(\d+)$/);
     if(m&&m[1]===y){ var n=parseInt(m[2],10); if(n>max)max=n; }
   });
