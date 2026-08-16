@@ -218,11 +218,11 @@ html[data-theme="dark"] .idbox label{color:#D8C49A}
 </div>
 <div class="toast" id="toast"></div>
 <script>
-/* --- Danh mục 84 biến --- */
+/* --- Danh mục 96 biến --- */
 var YN=["0. Không","1. Có"];
 var FIELDS=[
 {s:"A",k:"f1",n:"STT",t:"auto"},
-{s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"Dạng CR26-001: CR là Chợ Rẫy, 26 là năm mổ, 001 là số thứ tự trong năm."},
+{s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"Tự điền khi nhập ngày phẫu thuật. Muốn đổi thì chỉ cần gõ số thứ tự (ví dụ 7) rồi chạm ra ngoài — app tự thành CR26-007."},
 {s:"A",k:"f3",n:"Ngày phẫu thuật",t:"date",req:1},
 {s:"F",k:"f4",n:"Phẫu thuật viên chính (mã hóa)",t:"txt",req:1,hint:"Đọc từ biên bản phẫu thuật, mã hóa PTV1, PTV2, PTV3… — KHÔNG ghi tên thật"},
 {s:"A",k:"f5",n:"Ngày thu thập",t:"date"},
@@ -243,12 +243,16 @@ var FIELDS=[
 {s:"B",k:"f20",n:"Tiền sử đột quỵ",t:"sel",o:YN},
 {s:"B",k:"f21",n:"Phân độ NYHA",t:"sel",o:["1. I","2. II","3. III","4. IV"]},
 {s:"B",k:"f22",n:"LVEF",u:"%",t:"num",min:10,max:80,dec:1,hint:"Simpson hai mặt phẳng · giảm khi ≤40%"},
+{s:"B",k:"f99",n:"LVEDD",u:"mm",t:"num",min:30,max:90,dec:1,hint:"Trục dọc cạnh ức, CUỐI TÂM TRƯƠNG · giãn khi ≥52,5 mm"},
 {s:"B",k:"f23",n:"Đường kính nhĩ trái",u:"mm",t:"num",min:20,max:80,dec:1,hint:"Trục dọc cạnh ức, CUỐI TÂM THU · giãn khi >40 mm"},
 {s:"B",k:"f24",n:"Số nhánh ĐMV tổn thương",t:"sel",o:["1. Một","2. Hai","3. Ba nhánh"],hint:"≥50% thân chung hoặc ≥70% nhánh khác"},
 {s:"B",k:"f25",n:"Tổn thương thân chung",t:"sel",o:YN,hint:"Hẹp ≥50% đường kính lòng mạch"},
+{s:"B",k:"f100",n:"Tổn thương động mạch mũ (LCX)",t:"sel",o:YN,hint:"Hẹp ≥70% LCX hoặc nhánh chính của nó"},
 {s:"B",k:"f26",n:"Hemoglobin trước mổ",u:"g/L",t:"num",min:40,max:200,dec:0},
 {s:"B",k:"f27",n:"Kali máu trước mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2,hint:"Hạ kali khi <3,5"},
 {s:"B",k:"f28",n:"Chẹn beta trước mổ",t:"sel",o:YN},
+{s:"B",k:"f101",n:"Statin trước mổ",t:"sel",o:YN,hint:"Đang dùng statin lúc nhập viện — tách riêng khỏi biến rối loạn lipid máu"},
+{s:"B",k:"f102",n:"ƯCMC hoặc ƯCTT trước mổ",t:"sel",o:YN,hint:"Ức chế men chuyển hoặc ức chế thụ thể angiotensin"},
 {s:"B",k:"f29",n:"EuroSCORE II",u:"%",t:"calc",hint:"Tự tính từ mục B₂ theo hệ số Nashef 2012 — không chép từ hồ sơ"},
 {s:"B",k:"f30",n:"Mức độ khẩn phẫu thuật",t:"sel",o:["0. Chương trình","1. Bán cấp","2. Cấp cứu","3. Cứu vãn"],hint:"Theo EuroSCORE II: chương trình · bán cấp (chưa xuất viện) · cấp cứu (trước ngày làm việc kế) · cứu vãn (đang hồi sức tim phổi)"},
 {s:"C",k:"f31",n:"POAF",t:"sel",o:YN,req:1,gate:1,hint:"Rung/cuồng nhĩ mới ≥30 giây · cửa sổ: kết thúc mổ → xuất viện"},
@@ -264,13 +268,21 @@ var FIELDS=[
 {s:"D",k:"f41",n:"Chống đông cho POAF",t:"sel",o:YN,dep:["f31","1. Có"]},
 {s:"D",k:"f42",n:"Kali máu sau mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2},
 {s:"D",k:"f43",n:"Magie máu sau mổ",u:"mmol/L",t:"num",min:0.3,max:2,dec:2,hint:"Hạ magie khi <0,7"},
+{s:"D",k:"f103",n:"Canxi máu sau mổ (giờ 0)",u:"mmol/L",t:"num",min:1.5,max:3,dec:3,hint:"Canxi toàn phần ngay sau kết thúc mổ · ngưỡng nguy cơ <1,155"},
+{s:"D",k:"f104",n:"Bạch cầu sau mổ",u:"G/L",t:"num",min:1,max:60,dec:1,hint:"Công thức máu trong 24 giờ đầu"},
+{s:"D",k:"f105",n:"CRP sau mổ",u:"mg/L",t:"num",min:0,max:500,dec:1,hint:"Xét nghiệm sớm nhất sau mổ · không có thì bỏ trống"},
 {s:"E",k:"f44",n:"Tràn dịch màng tim sau mổ",t:"sel",o:YN,req:1,gate:1},
+{s:"E",k:"f106",n:"Ngày hậu phẫu làm siêu âm tim",u:"ngày",t:"num",min:0,max:60,dec:0,hint:"LẦN ĐẦU sau mổ · ngày mổ = ngày 0 · dùng để kiểm soát sai lệch phát hiện"},
+{s:"E",k:"f107",n:"Số lần siêu âm tim sau mổ",u:"lần",t:"num",min:0,max:20,dec:0},
 {s:"E",k:"f45",n:"Kích thước tràn dịch màng tim lớn nhất",u:"mm",t:"num",min:0,max:60,dec:0,dep:["f44","1. Có"],hint:"Đo CUỐI TÂM TRƯƠNG · nhẹ <10, TB 10–20, nhiều >20"},
 {s:"E",k:"f46",n:"Vị trí tràn dịch màng tim",t:"sel",o:["0. Không tràn dịch màng tim/không áp dụng","1. Sau–bên","2. Khu trú khác","3. Toàn thể"]},
 {s:"E",k:"f47",n:"Tràn dịch màng tim cần can thiệp",t:"sel",o:YN,dep:["f44","1. Có"]},
 {s:"E",k:"f48",n:"Chèn ép tim cấp",t:"sel",o:YN},
+{s:"E",k:"f108",n:"Tràn dịch màng phổi trái sau mổ",t:"sel",o:["0. Không","1. Nhẹ","2. Trung bình","3. Nhiều"],req:1,hint:"KẾT CỤC AN TOÀN CHÍNH · nhẹ = tù góc sườn hoành · TB = dưới 1/3 trường phổi · nhiều = từ 1/3 trở lên"},
 {s:"E",k:"f49",n:"Tràn dịch màng phổi trái cần can thiệp",t:"sel",o:YN},
 {s:"E",k:"f50",n:"Dẫn lưu ngực 24 giờ đầu",u:"mL",t:"num",min:0,max:5000,dec:0,hint:"Tổng qua tất cả ống, từ khi kết thúc mổ"},
+{s:"E",k:"f109",n:"Tổng lượng dẫn lưu ngực",u:"mL",t:"num",min:0,max:20000,dec:0,hint:"Từ khi kết thúc mổ đến khi rút ống cuối cùng"},
+{s:"E",k:"f110",n:"Số ngày lưu dẫn lưu ngực",u:"ngày",t:"num",min:0,max:60,dec:1,hint:"Đến khi rút ống dẫn lưu ngực cuối cùng"},
 {s:"E",k:"f51",n:"Thời gian thở máy",u:"giờ",t:"num",min:0,max:2000,dec:1,hint:"Đặt lại NKQ thì cộng dồn"},
 {s:"E",k:"f52",n:"Thời gian nằm hồi sức",u:"ngày",t:"num",min:0,max:200,dec:1},
 {s:"E",k:"f53",n:"Thời gian nằm viện",u:"ngày",t:"num",min:0,max:365,dec:0,req:1,gate:1,hint:"HẬU PHẪU: ngày mổ = ngày 0 → xuất viện"},
@@ -293,7 +305,7 @@ var FIELDS=[
 {s:"F",k:"f70",n:"Mở màng phổi trong mổ",t:"sel",o:YN,hint:"Gồm cả mở khi bóc động mạch ngực trong"},
 {s:"F",k:"f71",n:"Bên màng phổi được mở",t:"sel",o:["0. Không","1. Trái","2. Phải","3. Hai bên"],dep:["f70","1. Có"]},
 {s:"G",k:"f72",n:"Hồ sơ được đối chiếu chéo",t:"sel",o:YN,hint:"10% hồ sơ chọn ngẫu nhiên"},
-{s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:74,dec:0,dep:["f72","1. Có"]},
+{s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:96,dec:0,dep:["f72","1. Có"]},
 {s:"G",k:"f74",n:"Ghi chú",t:"area"},
 {s:"H",k:"f75",n:"Đái tháo đường phụ thuộc insulin",t:"sel",o:YN,hint:"Đang điều trị bằng insulin tại thời điểm phẫu thuật"},
 {s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4"},
@@ -633,9 +645,9 @@ function qHtml(f){
     h+='<input type="text" readonly value="'+v+'" placeholder="tự tính">';
   } else {
     h+='<input type="text" id="i_'+f.k+'" value="'+v+'" oninput="typed(\''+f.k+'\',this.value)"'
-      +(f.k==='f2'?' autocapitalize="characters"':'')+'>';
+      +(f.k==='f2'?' autocapitalize="characters" onblur="normCode()" placeholder="Gõ số thứ tự, ví dụ 7"':'')+'>';
   }
-  if(f.k==='f2') h+='<button class="mkcode" onclick="genCode()">Tự tạo mã theo năm mổ</button>';
+  if(f.k==='f2') h+='<button class="mkcode" onclick="genCode()">Lấy mã kế tiếp</button>';
   h+='<div class="msg" id="m_'+f.k+'"></div></div>';
   return h;
 }
@@ -661,7 +673,13 @@ function jumpNext(k){
     }
   }
 }
-function typed(k,v){ cur[k]=v; recompute(); paintEuroIfVisible();
+function typed(k,v){ cur[k]=v;
+  if(k==='f3'&&v&&!String(cur.f2||'').trim()){
+    cur.f2=makeCode();
+    var _e2=document.getElementById('i_f2'); if(_e2)_e2.value=cur.f2;
+    toast('Đã tự đặt mã '+cur.f2);
+  }
+  recompute(); paintEuroIfVisible();
   if(k==='f8'||k==='f9'){paintCalc('f10');} if(k==='f76'){paintCalc('f77');}
   paintCalc('f29'); validate(k); paintFieldStates(); save(); clearTimeout(window._ft);
   window._ft=setTimeout(paintFlags,450); }
@@ -1057,7 +1075,7 @@ function openGuide(){
    +'<div class="card"><h3>Thứ tự nhập</h3><p>Đi lần lượt A → B → B₂ → C → D → E → F → G. Phần <b>F (biên bản phẫu thuật)</b> bị khóa cho tới khi ghi xong kết cục. Thời điểm mở khóa của từng ca được lưu lại làm bằng chứng cho biện pháp làm mù ở mục 2.6.3.</p></div>'
    +'<div class="card"><h3>EuroSCORE II</h3><p>Tính tự động ở mục B₂. Chỉ nhập những yếu tố chưa có ở mục B. Nhấn “Xem các yếu tố đang được tính” để kiểm tra từng hệ số.</p><p>Ba yếu tố luôn bằng 0 do tiêu chuẩn loại trừ: mổ tim lại, phẫu thuật động mạch chủ ngực, mức độ nặng can thiệp.</p></div>'
    +'<div class="card"><h3>Sao lưu — quan trọng nhất</h3><p>Dữ liệu nằm trong bộ nhớ Safari trên máy này. <b>Cuối mỗi buổi hãy bấm “Tải file sao lưu”</b> rồi lưu vào Files hoặc gửi lên Drive.</p><ul><li>Xóa dữ liệu Safari sẽ mất sạch.</li><li>Nếu mở app từ Files thay vì từ Màn hình chính, iOS có thể dọn bộ nhớ sớm hơn — càng phải sao lưu thường xuyên.</li></ul></div>'
-   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng 84 cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
+   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng 110 cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
    +'<div class="card"><h3>Bảo mật</h3><p>Không nhập họ tên hay số hồ sơ. Chỉ dùng mã số nghiên cứu. Không có dữ liệu nào được gửi đi đâu — app chạy hoàn toàn ngoại tuyến.</p></div>'
    +'<div class="card"><h3>Đề tài</h3><p><b>BSNT. Lê Thế Kỷ</b> · Ngoại lồng ngực, MS 147241106<br>Bộ môn Phẫu thuật Lồng ngực – Tim mạch, Đại học Y Dược TP. Hồ Chí Minh<br>Khoa Hồi sức – Phẫu thuật Tim, Bệnh viện Chợ Rẫy</p></div>');
 }
@@ -1149,9 +1167,26 @@ function makeCode(){
   return 'CR'+y+'-'+('00'+(max+1)).slice(-3);
 }
 function genCode(){
-  if(!val('f3')){ toast('Điền ngày phẫu thuật trước để mã có đúng năm'); return; }
   cur.f2=makeCode(); recompute(); save(); render();
-  toast('Đã tạo mã '+cur.f2);
+  toast('Đã tạo mã '+cur.f2+(val('f3')?'':' — theo năm hiện tại, nhập ngày mổ để chắc chắn'));
+}
+/* Chuan hoa ma so nghien cuu */
+function normCode(){
+  var raw=String(cur.f2||'').trim().replace(/\s+/g,'').toUpperCase();
+  if(!raw) return;
+  var y=yy(val('f3')), yr=null, num=null, m;
+  if((m=raw.match(/^CR?(\d{2})[-–—](\d{1,4})$/))){ yr=m[1]; num=m[2]; }
+  else if((m=raw.match(/^(\d{2})[-–—](\d{1,4})$/))){ yr=m[1]; num=m[2]; }
+  else if((m=raw.match(/^(?:CR)?(\d{1,4})$/))){ yr=y; num=m[1]; }
+  if(num===null) return;
+  var ns=String(parseInt(num,10)); while(ns.length<3) ns='0'+ns;
+  var code='CR'+yr+'-'+ns;
+  if(code===cur.f2) return;
+  cur.f2=code;
+  var el=document.getElementById('i_f2'); if(el) el.value=code;
+  var dup=DB.cases.some(function(c,i){ return i!==curIdx && c.f2===code; });
+  recompute(); paintFieldStates(); save();
+  toast(dup ? ('Mã '+code+' đã có ở ca khác') : ('Mã số: '+code));
 }
 
 /* ============ DANH SÁCH NỐI MÃ ============ */

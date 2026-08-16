@@ -1,4 +1,4 @@
-var CACHE='poaf-lpp-v9';
+var CACHE='poaf-lpp-v10';
 var FILES=['./','./index.html','./manifest.json','./icon-180.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',function(e){
   self.skipWaiting();
