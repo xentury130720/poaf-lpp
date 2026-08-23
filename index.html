@@ -208,11 +208,6 @@ table.pv td.mt{background:var(--blue-l2)}
 .tag.tdemo{background:var(--gold);color:#3A2B08}
 .idb-demo{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink2);line-height:1.35}
 .idb-demo input{width:21px;height:21px;flex:none;margin:0}
-
-.convrow{display:flex;gap:8px;align-items:stretch;margin-top:2px}
-.convrow .unit-in{flex:1;min-width:0}
-.convrow .unit-in.alt input{background:var(--soft);border-style:dashed}
-.convnote{font-size:12px;color:var(--ink3);margin-top:5px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -234,16 +229,16 @@ table.pv td.mt{background:var(--blue-l2)}
 </div>
 <div class="toast" id="toast"></div>
 <script>
-/* --- Danh mục 96 biến --- */
+/* --- Danh mục 112 biến --- */
 var YN=["0. Không","1. Có"];
-/* Ma phau thuat vien. Bang doi chieu ten giu rieng, khong nam trong ma nguon. */
-var PTV=["PTV1","PTV2","PTV3","PTV4","PTV5"];
+/* Ten chi hien tren may nay de chon dung nguoi. Xuat Excel chi lay phan ma PTVn. */
+var PTV=["PTV1 (An)","PTV2 (Tịnh)","PTV3 (Phát)","PTV4 (Hải)","PTV5 (Trung)"];
 function ptvCode(v){ return String(v==null?"":v).replace(/\s*\(.*\)\s*$/,""); }
 var FIELDS=[
 {s:"A",k:"f1",n:"STT",t:"auto"},
 {s:"A",k:"f2",n:"Mã số nghiên cứu",t:"txt",req:1,hint:"Tự điền khi nhập ngày phẫu thuật. Muốn đổi thì chỉ cần gõ số thứ tự (ví dụ 7) rồi chạm ra ngoài — app tự thành CR26-007."},
 {s:"A",k:"f3",n:"Ngày phẫu thuật",t:"date",req:1},
-{s:"F",k:"f4",n:"Phẫu thuật viên chính (mã hóa)",t:"sel",o:PTV,req:1,hint:"Đối chiếu tên với mã theo bảng riêng của nghiên cứu viên. Không ghi tên thật vào đây."},
+{s:"F",k:"f4",n:"Phẫu thuật viên chính (mã hóa)",t:"sel",o:PTV,req:1,hint:"Tên trong ngoặc chỉ hiện trên máy này để chọn cho đúng. File Excel chỉ xuất PTV1–PTV5, KHÔNG kèm tên."},
 {s:"A",k:"f5",n:"Ngày thu thập",t:"date"},
 {s:"B",k:"f6",n:"Tuổi",u:"năm",t:"num",min:18,max:100,req:1},
 {s:"B",k:"f7",n:"Giới tính",t:"sel",o:["0. Nữ","1. Nam"],req:1},
@@ -267,7 +262,7 @@ var FIELDS=[
 {s:"B",k:"f24",n:"Số nhánh ĐMV tổn thương",t:"sel",o:["1. Một","2. Hai","3. Ba nhánh"],hint:"≥50% thân chung hoặc ≥70% nhánh khác"},
 {s:"B",k:"f25",n:"Tổn thương thân chung",t:"sel",o:YN,hint:"Hẹp ≥50% đường kính lòng mạch"},
 {s:"B",k:"f100",n:"Tổn thương động mạch mũ (LCX)",t:"sel",o:YN,hint:"Hẹp ≥70% LCX hoặc nhánh chính của nó"},
-{s:"B",k:"f26",n:"Hemoglobin trước mổ",u:"g/L",t:"num",min:40,max:200,dec:0,conv:["g/dL",10]},
+{s:"B",k:"f26",n:"Hemoglobin trước mổ",u:"g/L",t:"num",min:40,max:200,dec:0},
 {s:"B",k:"f27",n:"Kali máu trước mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2,hint:"Hạ kali khi <3,5"},
 {s:"B",k:"f28",n:"Chẹn beta trước mổ",t:"sel",o:YN},
 {s:"B",k:"f101",n:"Statin trước mổ",t:"sel",o:YN,hint:"Đang dùng statin lúc nhập viện — tách riêng khỏi biến rối loạn lipid máu"},
@@ -286,10 +281,10 @@ var FIELDS=[
 {s:"D",k:"f40",n:"Sốc điện chuyển nhịp",t:"sel",o:YN,dep:["f31","1. Có"]},
 {s:"D",k:"f41",n:"Chống đông cho POAF",t:"sel",o:YN,dep:["f31","1. Có"]},
 {s:"D",k:"f42",n:"Kali máu sau mổ",u:"mmol/L",t:"num",min:2,max:7,dec:2},
-{s:"D",k:"f43",n:"Magie máu sau mổ",u:"mmol/L",t:"num",min:0.3,max:2,dec:2,hint:"Hạ magie khi <0,7",conv:["mg/dL",0.4114]},
-{s:"D",k:"f103",n:"Canxi máu sau mổ (giờ 0)",u:"mmol/L",t:"num",min:1.5,max:3,dec:3,hint:"Canxi toàn phần ngay sau kết thúc mổ · ngưỡng nguy cơ <1,155",conv:["mg/dL",0.2495]},
+{s:"D",k:"f43",n:"Magie máu sau mổ",u:"mmol/L",t:"num",min:0.3,max:2,dec:2,hint:"Hạ magie khi <0,7"},
+{s:"D",k:"f103",n:"Canxi máu sau mổ (giờ 0)",u:"mmol/L",t:"num",min:1.5,max:3,dec:3,hint:"Canxi toàn phần ngay sau kết thúc mổ · ngưỡng nguy cơ <1,155"},
 {s:"D",k:"f104",n:"Bạch cầu sau mổ",u:"G/L",t:"num",min:1,max:60,dec:1,hint:"Công thức máu trong 24 giờ đầu"},
-{s:"D",k:"f105",n:"CRP sau mổ",u:"mg/L",t:"num",min:0,max:500,dec:1,hint:"Xét nghiệm sớm nhất sau mổ · không có thì bỏ trống",conv:["mg/dL",10]},
+{s:"D",k:"f105",n:"CRP sau mổ",u:"mg/L",t:"num",min:0,max:500,dec:1,hint:"Xét nghiệm sớm nhất sau mổ · không có thì bỏ trống"},
 {s:"E",k:"f44",n:"Tràn dịch màng tim sau mổ",t:"sel",o:YN,req:1,gate:1},
 {s:"E",k:"f106",n:"Ngày hậu phẫu làm siêu âm tim",u:"ngày",t:"num",min:0,max:60,dec:0,hint:"LẦN ĐẦU sau mổ · ngày mổ = ngày 0 · dùng để kiểm soát sai lệch phát hiện"},
 {s:"E",k:"f107",n:"Số lần siêu âm tim sau mổ",u:"lần",t:"num",min:0,max:20,dec:0},
@@ -301,9 +296,9 @@ var FIELDS=[
 {s:"E",k:"f49",n:"Tràn dịch màng phổi trái cần can thiệp",t:"sel",o:YN},
 {s:"E",k:"f50",n:"Dẫn lưu ngực 24 giờ đầu",u:"mL",t:"num",min:0,max:5000,dec:0,hint:"Tổng qua tất cả ống, từ khi kết thúc mổ"},
 {s:"E",k:"f109",n:"Tổng lượng dẫn lưu ngực",u:"mL",t:"num",min:0,max:20000,dec:0,hint:"Từ khi kết thúc mổ đến khi rút ống cuối cùng"},
-{s:"E",k:"f110",n:"Số ngày lưu dẫn lưu ngực",u:"ngày",t:"num",min:0,max:60,dec:0,hint:"Đến khi rút ống dẫn lưu ngực cuối cùng"},
+{s:"E",k:"f110",n:"Số ngày lưu dẫn lưu ngực",u:"ngày",t:"num",min:0,max:60,dec:1,hint:"Đến khi rút ống dẫn lưu ngực cuối cùng"},
 {s:"E",k:"f51",n:"Thời gian thở máy",u:"giờ",t:"num",min:0,max:2000,dec:1,hint:"Đặt lại NKQ thì cộng dồn"},
-{s:"E",k:"f52",n:"Thời gian nằm hồi sức",u:"ngày",t:"num",min:0,max:200,dec:0},
+{s:"E",k:"f52",n:"Thời gian nằm hồi sức",u:"ngày",t:"num",min:0,max:200,dec:1},
 {s:"E",k:"f53",n:"Thời gian nằm viện",u:"ngày",t:"num",min:0,max:365,dec:0,req:1,gate:1,hint:"HẬU PHẪU: ngày mổ = ngày 0 → xuất viện"},
 {s:"E",k:"f54",n:"Mổ lại cầm máu",t:"sel",o:YN,gate:1,hint:"Trong cùng đợt nằm viện"},
 {s:"E",k:"f55",n:"Đột quỵ sau mổ",t:"sel",o:YN,gate:1,hint:"Thiếu hụt thần kinh mới ≥24 giờ, xác nhận CT/MRI"},
@@ -311,6 +306,8 @@ var FIELDS=[
 {s:"E",k:"f57",n:"Viêm phổi sau mổ",t:"sel",o:YN,gate:1,hint:"Tiêu chuẩn CDC/NHSN"},
 {s:"E",k:"f58",n:"Tử vong nội viện",t:"sel",o:YN,req:1,gate:1,hint:"Gồm cả bệnh nặng thân nhân xin về"},
 {s:"F",k:"f59",n:"LPP",t:"sel",o:YN,req:1,hint:"BIẾN PHƠI NHIỄM"},
+{s:"F",k:"f111",n:"Dính màng ngoài tim hoặc khoang màng phổi trái",t:"sel",o:YN,hint:"Ghi nhận từ biên bản phẫu thuật — dính có thể vừa cản trở kỹ thuật vừa là dấu hiệu viêm màng tim từ trước"},
+{s:"F",k:"f112",n:"Lý do không mở màng tim",t:"sel",o:["0. Phẫu thuật viên không thực hiện thường quy","1. Dính màng ngoài tim hoặc khoang màng phổi trái","2. Không xác định rõ thần kinh hoành trái","3. Huyết động không ổn định, cần rút ngắn cuộc mổ","4. Lý do khác — ghi ở mục Ghi chú"],req:1,dep:["f59","0. Không"],hint:"BẮT BUỘC khi không mở — phân biệt do thói quen phẫu thuật viên hay do lý do kỹ thuật của chính ca đó"},
 {s:"F",k:"f60",n:"Số cầu nối",u:"miệng nối",t:"num",min:1,max:8,dec:0,hint:"SỐ MIỆNG NỐI XA · cầu tuần tự: mỗi miệng nối xa tính một"},
 {s:"F",k:"f61",n:"Sử dụng động mạch ngực trong",t:"sel",o:["0. Không","1. Một bên (SIMA)","2. Hai bên (BIMA)"]},
 {s:"F",k:"f62",n:"Cầu nối toàn động mạch",t:"sel",o:YN,hint:"Không dùng tĩnh mạch hiển"},
@@ -324,10 +321,10 @@ var FIELDS=[
 {s:"F",k:"f70",n:"Mở màng phổi trong mổ",t:"sel",o:YN,hint:"Gồm cả mở khi bóc động mạch ngực trong"},
 {s:"F",k:"f71",n:"Bên màng phổi được mở",t:"sel",o:["0. Không","1. Trái","2. Phải","3. Hai bên"],dep:["f70","1. Có"]},
 {s:"G",k:"f72",n:"Hồ sơ được đối chiếu chéo",t:"sel",o:YN,hint:"10% hồ sơ chọn ngẫu nhiên"},
-{s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:96,dec:0,dep:["f72","1. Có"]},
+{s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:112,dec:0,dep:["f72","1. Có"]},
 {s:"G",k:"f74",n:"Ghi chú",t:"area"},
 {s:"H",k:"f75",n:"Đái tháo đường phụ thuộc insulin",t:"sel",o:YN,hint:"Đang điều trị bằng insulin tại thời điểm phẫu thuật"},
-{s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4",conv:["mg/dL",88.4]},
+{s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4"},
 {s:"H",k:"f77",n:"Độ thanh thải creatinin",u:"mL/phút",t:"calc",hint:"Tự tính theo Cockcroft–Gault từ tuổi, cân nặng, giới, creatinin"},
 {s:"H",k:"f78",n:"Đang lọc máu định kỳ",t:"sel",o:YN,hint:"Bất kể độ thanh thải creatinin"},
 {s:"H",k:"f79",n:"Suy giảm vận động nặng",t:"sel",o:YN,hint:"Do bệnh thần kinh hoặc cơ xương khớp, ảnh hưởng nặng tới sinh hoạt hằng ngày"},
@@ -673,16 +670,9 @@ function qHtml(f){
         +o.replace(/^\d+\.\s*/,'')+'</button>';});
     h+='</div>';
   } else if(f.t==='num'){
-    var main='<div class="unit-in"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="i_'+f.k
+    h+='<div class="unit-in"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="i_'+f.k
       +'" value="'+v+'" oninput="typed(\''+f.k+'\',this.value)" placeholder="'+(f.min!==undefined?f.min+'–'+f.max:'')+'">'
       +(f.u?'<span class="unit">'+f.u+'</span>':'')+'</div>';
-    if(f.conv){
-      h+='<div class="convrow">'+main
-       +'<div class="unit-in alt"><input type="text" inputmode="decimal" pattern="[0-9.,]*" id="alt_'+f.k
-       +'" value="'+altOf(f,v)+'" oninput="altTyped(\''+f.k+'\',this.value)" placeholder="hoặc nhập ở đây">'
-       +'<span class="unit">'+f.conv[0]+'</span></div></div>'
-       +'<div class="convnote">Ô trái tính bằng <b>'+f.u+'</b> — đây là số được lưu. Ô phải tính bằng <b>'+f.conv[0]+'</b> nếu phiếu xét nghiệm ghi theo đơn vị đó. Nhập ô nào cũng được, ô kia tự đổi.</div>';
-    } else h+=main;
   } else if(f.t==='date'){
     h+='<input type="date" id="i_'+f.k+'" value="'+v+'" onchange="typed(\''+f.k+'\',this.value)" oninput="typed(\''+f.k+'\',this.value)">';
   } else if(f.t==='area'){
@@ -719,28 +709,7 @@ function jumpNext(k){
     }
   }
 }
-function altOf(f,v){
-  if(!f||!f.conv) return '';
-  var x=parseFloat(String(v).replace(',','.'));
-  return isNaN(x) ? '' : String(Math.round(x/f.conv[1]*1000)/1000);
-}
-function paintAlt(k){
-  var f=fld(k); if(!f||!f.conv) return;
-  var a=document.getElementById('alt_'+k); if(!a) return;
-  if(document.activeElement===a) return;
-  a.value=altOf(f,val(k));
-}
-function altTyped(k,v){
-  var f=fld(k); if(!f||!f.conv) return;
-  var x=parseFloat(String(v).replace(',','.'));
-  var out='';
-  if(!isNaN(x)){ var y=x*f.conv[1]; out = f.dec ? y.toFixed(f.dec) : String(Math.round(y)); }
-  cur[k]=out;
-  var e=document.getElementById('i_'+k); if(e) e.value=out;
-  recompute(); paintCalc('f29'); validate(k); paintFieldStates(); save();
-  clearTimeout(window._ft); window._ft=setTimeout(paintFlags,450);
-}
-function typed(k,v){ cur[k]=v; paintAlt(k);
+function typed(k,v){ cur[k]=v;
   if(k==='f3'&&v&&!String(cur.f2||'').trim()){
     cur.f2=makeCode();
     var _e2=document.getElementById('i_f2'); if(_e2)_e2.value=cur.f2;
@@ -841,6 +810,20 @@ function crossChecks(c){
     W.push(['f47','Không tràn dịch nhưng lại cần can thiệp dẫn lưu.']);
   if(v('f58')==='1. Có' && v('f34')==='1. Có')
     W.push(['f34','Tử vong nội viện nhưng ghi đã hồi phục nhịp xoang khi xuất viện.']);
+  if(v('f108')==='0. Không' && v('f49')==='1. Có')
+    W.push(['f49','Ghi không tràn dịch màng phổi trái nhưng lại cần can thiệp.']);
+  if(v('f44')==='1. Có' && !v('f106'))
+    W.push(['f106','Có tràn dịch màng tim nhưng chưa ghi ngày làm siêu âm — thiếu biến này thì không diễn giải được kết quả.']);
+  var d24=n('f50'), dtot=n('f109');
+  if(d24!==null && dtot!==null && dtot<d24)
+    W.push(['f109','Tổng lượng dẫn lưu nhỏ hơn lượng dẫn lưu 24 giờ đầu.']);
+  var lvedd=n('f99'), lad=n('f23');
+  if(lvedd!==null && lad!==null && lvedd<lad)
+    W.push(['f99','LVEDD nhỏ hơn đường kính nhĩ trái — xem lại phiếu siêu âm.']);
+  if(v('f59')==='1. Có' && v('f112'))
+    W.push(['f112','Đã mở màng tim nhưng vẫn ghi lý do không mở.']);
+  if(v('f112')==='1. Dính màng ngoài tim hoặc khoang màng phổi trái' && v('f111')==='0. Không')
+    W.push(['f111','Lý do không mở là do dính nhưng biến dính lại ghi Không.']);
   var on=n('f32'), los=n('f53');
   if(on!==null && los!==null && on>los)
     W.push(['f32','Ngày khởi phát POAF ('+on+') muộn hơn ngày xuất viện ('+los+').']);
@@ -1105,6 +1088,7 @@ function openMenu(){
    +'<button class="a2" onclick="renameDevice()">Kho dữ liệu: '+deviceLabel()+'</button>'
    +'<button class="a2" onclick="openGuide()">Hướng dẫn sử dụng</button>'
    +'<button class="a2" onclick="openVars()">Danh mục biến — kiểm tra còn thiếu gì</button>'
+   +'<button class="a2" onclick="openPtv()">Phân bố mở màng tim theo phẫu thuật viên</button>'
    +'<button class="a2" onclick="openLog()">Nhật ký thao tác ('+((DB.log||[]).length)+')</button>'
    +((DB.trash||[]).length?'<button class="a2" onclick="openTrash()">Thùng rác ('+DB.trash.length+' ca)</button>':'')
    +(demoCases().length?'<button class="a2" onclick="purgeDemo()">Xóa '+demoCases().length+' ca mẫu</button>':'')
@@ -1119,6 +1103,43 @@ function openMenu(){
   }
   sheet('Bảng điều khiển', DB.cases.length+' ca đã lưu', h);
   renderRows();
+}
+
+/* ============ PHÂN BỐ LPP THEO PHẪU THUẬT VIÊN ============ */
+function ptvStats(){
+  var m={}, tot={lpp:0,ctl:0};
+  included().forEach(function(c){
+    var k=String(c.f4||'').trim() || '(chưa ghi)';
+    if(!m[k]) m[k]={ptv:k,lpp:0,ctl:0,n:0,dinh:0,ly:{}};
+    var o=m[k]; o.n++;
+    if(c.f59==='1. Có') { o.lpp++; tot.lpp++; }
+    else if(c.f59==='0. Không') { o.ctl++; tot.ctl++;
+      var r=String(c.f112||'(chưa ghi lý do)'); o.ly[r]=(o.ly[r]||0)+1; }
+    if(c.f111==='1. Có') o.dinh++;
+  });
+  var arr=Object.keys(m).map(function(k){var o=m[k];
+    o.pct = o.n ? Math.round(o.lpp/o.n*1000)/10 : 0;
+    o.risk = (o.n>=5 && (o.pct>=95 || o.pct<=5));
+    return o;});
+  arr.sort(function(a,b){return b.n-a.n;});
+  return {rows:arr, tot:tot};
+}
+function ptvRows(){
+  var S=ptvStats();
+  var rows=[['Phẫu thuật viên','Tổng ca','Có mở','Không mở','Tỷ lệ mở (%)','Có dính','Ghi chú']];
+  S.rows.forEach(function(o){
+    rows.push([o.ptv,o.n,o.lpp,o.ctl,o.pct,o.dinh,
+      o.risk ? 'Gần như chỉ làm một cách — trùng lặp với biến phơi nhiễm' : '']);
+  });
+  rows.push(['','','','','','','']);
+  rows.push(['LÝ DO KHÔNG MỞ, THEO PHẪU THUẬT VIÊN','','','','','','']);
+  rows.push(['Phẫu thuật viên','Lý do','Số ca','','','','']);
+  S.rows.forEach(function(o){
+    Object.keys(o.ly).sort().forEach(function(r){ rows.push([o.ptv,r,o.ly[r],'','','','']); });
+  });
+  rows.push(['','','','','','','']);
+  rows.push(['Ghi chú','Nếu một phẫu thuật viên gần như luôn mở hoặc gần như không bao giờ mở thì yếu tố phẫu thuật viên và biến phơi nhiễm gần như trùng nhau. Khi đó cần đưa phẫu thuật viên vào mô hình hiệu ứng ngẫu nhiên và phân tích độ nhạy riêng.','','','','','']);
+  return rows;
 }
 
 /* ============ DANH MỤC BIẾN ============ */
@@ -1175,6 +1196,39 @@ function jumpToVar(k){
   },90);
 }
 
+
+function openPtv(){
+  var S=ptvStats();
+  if(!S.rows.length){ toast('Chưa có ca nào được nhận vào'); return; }
+  var risky=S.rows.filter(function(o){return o.risk;});
+  var h='<div class="warn">Bảng này cho biết mức độ <b>trùng lặp giữa phẫu thuật viên và biến phơi nhiễm</b>. '
+   +'Nếu một người gần như luôn mở hoặc gần như không bao giờ mở thì hiệu quả kỹ thuật khó tách khỏi tay nghề người mổ.</div>';
+  if(risky.length)
+    h+='<div class="errb"><b>'+risky.length+' phẫu thuật viên gần như chỉ làm một cách:</b><br>'
+      +risky.map(function(o){return o.ptv+' — '+o.pct+'%';}).join('<br>')+'</div>';
+  S.rows.forEach(function(o){
+    var col = o.pct>=95?'var(--green)':(o.pct<=5?'var(--red)':'var(--gold-d)');
+    h+='<div class="row" style="display:block">'
+     +'<div style="display:flex;align-items:center;gap:10px"><b style="flex:1;color:var(--ink)">'+o.ptv+'</b>'
+     +'<b style="color:'+col+';font-size:17px">'+o.pct+'%</b></div>'
+     +'<div style="height:9px;background:var(--soft);border-radius:20px;overflow:hidden;margin:8px 0 6px">'
+     +'<i style="display:block;height:100%;width:'+o.pct+'%;background:'+col+'"></i></div>'
+     +'<span style="font-size:12.5px;color:var(--ink3)">'+o.n+' ca · mở '+o.lpp+' · không mở '+o.ctl
+     +(o.dinh?' · dính '+o.dinh:'')+'</span></div>';
+  });
+  var ly={}; S.rows.forEach(function(o){ Object.keys(o.ly).forEach(function(r){ ly[r]=(ly[r]||0)+o.ly[r]; }); });
+  var ks=Object.keys(ly);
+  if(ks.length){
+    var tong=0; ks.forEach(function(k){tong+=ly[k];});
+    h+='<div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.8px;margin:18px 0 8px">Lý do không mở màng tim</div>';
+    ks.sort(function(a,b){return ly[b]-ly[a];}).forEach(function(k){
+      h+='<div class="row"><div class="l"><b style="font-size:14px">'+k+'</b></div>'
+       +'<span class="tag tw">'+ly[k]+' ca · '+Math.round(ly[k]/tong*1000)/10+'%</span></div>'; });
+    h+='<div class="warn" style="margin-top:12px">Ca không mở vì <b>lý do kỹ thuật của chính ca đó</b> khác hẳn ca không mở vì <b>phẫu thuật viên không làm thường quy</b>. Tách riêng khi phân tích độ nhạy.</div>';
+  }
+  sheet('Phân bố theo phẫu thuật viên', included().length+' ca được nhận vào', h);
+}
+
 function openGuide(){
   sheet('Hướng dẫn','Đọc một lần là đủ',
    '<div class="card"><h3>Mẹo thao tác nhanh</h3><ul>'
@@ -1183,11 +1237,11 @@ function openGuide(){
    +'<li>Nút <b>“đánh dấu Không”</b> ở góc phải tiêu đề mục điền Không cho toàn bộ câu Có/Không còn trống — rồi chỉ sửa vài câu có.</li>'
    +'<li>Mục G có bảng rà soát: chạm vào dòng nào là nhảy thẳng tới ô đó.</li>'
    +'<li>Đổi giao diện sáng/tối trong bảng điều khiển.</li></ul></div>'
-   +'<div class="card"><h3>Cảnh báo mâu thuẫn</h3><p>App tự đối chiếu 15 cặp biến với nhau. Ví dụ: có làm cửa sổ màng tim nhưng ghi không mở màng phổi, ghi không POAF nhưng lại có điều trị rung nhĩ, ngày khởi phát POAF muộn hơn ngày xuất viện. Ô nghi ngờ được viền vàng kèm lời nhắc.</p><p>Đây chỉ là nhắc, không chặn — bạn vẫn lưu được nếu số liệu đúng như hồ sơ.</p></div>'
+   +'<div class="card"><h3>Cảnh báo mâu thuẫn</h3><p>App tự đối chiếu 21 cặp biến với nhau. Ví dụ: có làm cửa sổ màng tim nhưng ghi không mở màng phổi, ghi không POAF nhưng lại có điều trị rung nhĩ, ngày khởi phát POAF muộn hơn ngày xuất viện. Ô nghi ngờ được viền vàng kèm lời nhắc.</p><p>Đây chỉ là nhắc, không chặn — bạn vẫn lưu được nếu số liệu đúng như hồ sơ.</p></div>'
    +'<div class="card"><h3>Thứ tự nhập</h3><p>Đi lần lượt A → B → B₂ → C → D → E → F → G. Phần <b>F (biên bản phẫu thuật)</b> bị khóa cho tới khi ghi xong kết cục. Thời điểm mở khóa của từng ca được lưu lại làm bằng chứng cho biện pháp làm mù ở mục 2.6.3.</p></div>'
    +'<div class="card"><h3>EuroSCORE II</h3><p>Tính tự động ở mục B₂. Chỉ nhập những yếu tố chưa có ở mục B. Nhấn “Xem các yếu tố đang được tính” để kiểm tra từng hệ số.</p><p>Ba yếu tố luôn bằng 0 do tiêu chuẩn loại trừ: mổ tim lại, phẫu thuật động mạch chủ ngực, mức độ nặng can thiệp.</p></div>'
    +'<div class="card"><h3>Sao lưu — quan trọng nhất</h3><p>Dữ liệu nằm trong bộ nhớ Safari trên máy này. <b>Cuối mỗi buổi hãy bấm “Tải file sao lưu”</b> rồi lưu vào Files hoặc gửi lên Drive.</p><ul><li>Xóa dữ liệu Safari sẽ mất sạch.</li><li>Nếu mở app từ Files thay vì từ Màn hình chính, iOS có thể dọn bộ nhớ sớm hơn — càng phải sao lưu thường xuyên.</li></ul></div>'
-   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng 110 cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
+   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng 112 cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
    +'<div class="card"><h3>Bảo mật</h3><p>Không nhập họ tên hay số hồ sơ. Chỉ dùng mã số nghiên cứu. Không có dữ liệu nào được gửi đi đâu — app chạy hoàn toàn ngoại tuyến.</p></div>'
    +'<div class="card"><h3>Đề tài</h3><p><b>BSNT. Lê Thế Kỷ</b> · Ngoại lồng ngực, MS 147241106<br>Bộ môn Phẫu thuật Lồng ngực – Tim mạch, Đại học Y Dược TP. Hồ Chí Minh<br>Khoa Hồi sức – Phẫu thuật Tim, Bệnh viện Chợ Rẫy</p></div>');
 }
@@ -1237,7 +1291,7 @@ function exportXlsx(){
       e.note||'']);
   });
   share(new Blob([buildXlsx([{name:'NhapLieu',rows:rows},{name:'SangLoc',rows:scr},
-    {name:'SoDoDongChay',rows:flow},{name:'TuDien',rows:dict},{name:'ThongTin',rows:meta},{name:'NhatKy',rows:lg}])],
+    {name:'SoDoDongChay',rows:flow},{name:'PhanBoPTV',rows:ptvRows()},{name:'TuDien',rows:dict},{name:'ThongTin',rows:meta},{name:'NhatKy',rows:lg}])],
     {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
     'POAF_LPP_dulieu_'+stamp()+'.xlsx');
 }
