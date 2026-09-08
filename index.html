@@ -449,7 +449,7 @@ function scrBanner(){
   var r=screenVerdict();
   if(r.verdict==='Loại trừ')
     return '<div class="errb"><b>LOẠI TRỪ KHỎI NGHIÊN CỨU</b><br>Lý do:<br>• '+r.reasons.join('<br>• ')
-      +'<br><br>Chỉ cần điền mã số nghiên cứu và ngày phẫu thuật ở mục A rồi lưu. Không phải nhập 84 biến còn lại.</div>';
+      +'<br><br>Chỉ cần điền mã số nghiên cứu và ngày phẫu thuật ở mục A rồi lưu. Không phải nhập '+(FIELDS.length-14)+' biến còn lại.</div>';
   if(r.verdict==='Nhận vào')
     return '<div class="warn" style="border-left-color:var(--green);background:var(--green-l);color:var(--green)">'
       +'<b>ĐỦ TIÊU CHUẨN — TIẾP TỤC NHẬP</b><br>Thỏa cả 5 tiêu chuẩn chọn, không vướng tiêu chuẩn loại trừ nào.</div>';
@@ -901,7 +901,7 @@ function reviewHtml(){
   }
   if(!req.length&&!W.length&&!opt.length)
     h+='<div class="warn" style="border-left-color:var(--green);background:var(--green-l);color:var(--green)">'
-      +'<b>Đã điền đủ 84 biến, không phát hiện mâu thuẫn.</b> Bấm Lưu ca này.</div>';
+      +'<b>Đã điền đủ các biến cần thiết, không phát hiện mâu thuẫn.</b> Bấm Lưu ca này.</div>';
   var l=0,c2=0; included().forEach(function(x){if(x.f59==='1. Có')l++;else if(x.f59==='0. Không')c2++;});
   h+='<div class="card"><h3>Tiến độ sau khi lưu ca này</h3><p>'
    +'Nhóm LPP <b>'+(l+(val('f59')==='1. Có'?1:0))+'/'+TARGET+'</b> · '
@@ -1234,7 +1234,7 @@ function openGuide(){
    +'<div class="card"><h3>Thứ tự nhập</h3><p>Đi lần lượt A → B → B₂ → C → D → E → F → G. Phần <b>F (biên bản phẫu thuật)</b> bị khóa cho tới khi ghi xong kết cục. Thời điểm mở khóa của từng ca được lưu lại làm bằng chứng cho biện pháp làm mù ở mục 2.6.3.</p></div>'
    +'<div class="card"><h3>EuroSCORE II</h3><p>Tính tự động ở mục B₂. Chỉ nhập những yếu tố chưa có ở mục B. Nhấn “Xem các yếu tố đang được tính” để kiểm tra từng hệ số.</p><p>Ba yếu tố luôn bằng 0 do tiêu chuẩn loại trừ: mổ tim lại, phẫu thuật động mạch chủ ngực, mức độ nặng can thiệp.</p></div>'
    +'<div class="card"><h3>Sao lưu — quan trọng nhất</h3><p>Dữ liệu nằm trong bộ nhớ Safari trên máy này. <b>Cuối mỗi buổi hãy bấm “Tải file sao lưu”</b> rồi lưu vào Files hoặc gửi lên Drive.</p><ul><li>Xóa dữ liệu Safari sẽ mất sạch.</li><li>Nếu mở app từ Files thay vì từ Màn hình chính, iOS có thể dọn bộ nhớ sớm hơn — càng phải sao lưu thường xuyên.</li></ul></div>'
-   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng 110 cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
+   +'<div class="card"><h3>Gộp dữ liệu với máy tính</h3><p>File Excel xuất từ điện thoại có đúng '+FIELDS.length+' cột như bản máy tính. File sao lưu JSON dùng chung được cả hai chiều.</p></div>'
    +'<div class="card"><h3>Bảo mật</h3><p>Không nhập họ tên hay số hồ sơ. Chỉ dùng mã số nghiên cứu. Không có dữ liệu nào được gửi đi đâu — app chạy hoàn toàn ngoại tuyến.</p></div>'
    +'<div class="card"><h3>Đề tài</h3><p><b>BSNT. Lê Thế Kỷ</b> · Ngoại lồng ngực, MS 147241106<br>Bộ môn Phẫu thuật Lồng ngực – Tim mạch, Đại học Y Dược TP. Hồ Chí Minh<br>Khoa Hồi sức – Phẫu thuật Tim, Bệnh viện Chợ Rẫy</p></div>');
 }
