@@ -1,7 +1,7 @@
 {
   "name": "POAF · LPP — Thu thập số liệu",
   "short_name": "POAF · LPP",
-  "description": "Phiếu thu thập số liệu nghiên cứu mở cửa sổ màng tim vào khoang màng phổi trái dự phòng rung nhĩ sau OPCAB",
+  "description": "Phiếu thu thập số liệu nghiên cứu cắt màng ngoài tim sau bên trái trong bắc cầu mạch vành không tuần hoàn ngoài cơ thể",
   "lang": "vi",
   "start_url": "./index.html",
   "scope": "./",

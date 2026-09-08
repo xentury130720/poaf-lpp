@@ -324,7 +324,7 @@ var FIELDS=[
 {s:"F",k:"f71",n:"Bên màng phổi được mở",t:"sel",o:["0. Không","1. Trái","2. Phải","3. Hai bên"],dep:["f70","1. Có"]},
 {s:"G",k:"f72",n:"Hồ sơ được đối chiếu chéo",t:"sel",o:YN,hint:"10% hồ sơ chọn ngẫu nhiên"},
 {s:"G",k:"f73",n:"Số biến không khớp",u:"biến",t:"num",min:0,max:110,dec:0,dep:["f72","1. Có"]},
-{s:"G",k:"f74",n:"Ghi chú",t:"area",hint:"Ghi những gì không có ô riêng nào chứa được. Bốn tình huống hay gặp: hồ sơ mâu thuẫn giữa các nguồn · lý do kỹ thuật khiến không mở màng tim, ví dụ dính · vì sao thiếu dữ liệu · ca đặc biệt cần nhớ khi viết bàn luận."},
+{s:"G",k:"f74",n:"Ghi chú",t:"area",hint:"Ghi những gì không có ô riêng nào chứa được. Bốn tình huống hay gặp: hồ sơ mâu thuẫn giữa các nguồn · lý do kỹ thuật khiến không cắt màng ngoài tim, ví dụ dính · vì sao thiếu dữ liệu · ca đặc biệt cần nhớ khi viết bàn luận."},
 {s:"H",k:"f75",n:"Đái tháo đường phụ thuộc insulin",t:"sel",o:YN,hint:"Đang điều trị bằng insulin tại thời điểm phẫu thuật"},
 {s:"H",k:"f76",n:"Creatinin máu trước mổ",u:"µmol/L",t:"num",min:20,max:1500,dec:0,hint:"Nếu labo trả mg/dL thì nhân 88,4"},
 {s:"H",k:"f77",n:"Độ thanh thải creatinin",u:"mL/phút",t:"calc",hint:"Tự tính theo Cockcroft–Gault từ tuổi, cân nặng, giới, creatinin"},
@@ -742,7 +742,7 @@ function paintFieldStates(){
   if(el) el.textContent='Cả ca: đã điền '+done+' · còn '+todo;
 }
 
-var NOTE_CHIPS=[["Hồ sơ mâu thuẫn","Hồ sơ mâu thuẫn: "],["Lý do không mở","Lý do không mở màng tim ghi trong biên bản: "],["Thiếu dữ liệu","Thiếu dữ liệu: "],["Ca đặc biệt","Ca đặc biệt: "],["Cách xử trí","Cách xử trí đã thống nhất: "]];
+var NOTE_CHIPS=[["Hồ sơ mâu thuẫn","Hồ sơ mâu thuẫn: "],["Lý do không cắt","Lý do không cắt màng ngoài tim ghi trong biên bản: "],["Thiếu dữ liệu","Thiếu dữ liệu: "],["Ca đặc biệt","Ca đặc biệt: "],["Cách xử trí","Cách xử trí đã thống nhất: "]];
 var NOTE_PH="Ví dụ: Siêu âm ngày 3 ghi tràn dịch nhưng biên bản mổ không nhắc — lấy theo siêu âm.";
 function noteAdd(i){
   var cur0=val('f74'), add=NOTE_CHIPS[i][1];
@@ -812,7 +812,7 @@ function crossChecks(c){
   function v(k){return (c[k]===undefined||c[k]===null)?'':String(c[k]).trim();}
   function n(k){var x=parseFloat(String(v(k)).replace(',','.'));return isNaN(x)?null:x;}
   if(v('f59')==='1. Có' && v('f70')==='0. Không')
-    W.push(['f70','Đã làm cửa sổ màng tim vào khoang màng phổi trái nhưng ghi không mở màng phổi — xem lại biên bản.']);
+    W.push(['f70','Đã cắt màng ngoài tim sau bên trái nhưng ghi không mở màng phổi — xem lại biên bản.']);
   if(v('f59')==='1. Có' && v('f71')==='2. Phải')
     W.push(['f71','Cửa sổ mở vào khoang màng phổi TRÁI nhưng chỉ ghi mở màng phổi phải.']);
   if(v('f31')==='0. Không'){
@@ -1099,7 +1099,7 @@ function openMenu(){
    +'<button class="a2" onclick="renameDevice()">Kho dữ liệu: '+deviceLabel()+'</button>'
    +'<button class="a2" onclick="openGuide()">Hướng dẫn sử dụng</button>'
    +'<button class="a2" onclick="openVars()">Danh mục biến — kiểm tra còn thiếu gì</button>'
-   +'<button class="a2" onclick="openPtv()">Phân bố mở màng tim theo phẫu thuật viên</button>'
+   +'<button class="a2" onclick="openPtv()">Phân bố cắt màng ngoài tim theo phẫu thuật viên</button>'
    +'<button class="a2" onclick="openLog()">Nhật ký thao tác ('+((DB.log||[]).length)+')</button>'
    +((DB.trash||[]).length?'<button class="a2" onclick="openTrash()">Thùng rác ('+DB.trash.length+' ca)</button>':'')
    +(demoCases().length?'<button class="a2" onclick="purgeDemo()">Xóa '+demoCases().length+' ca mẫu</button>':'')
@@ -1135,13 +1135,13 @@ function ptvStats(){
 }
 function ptvRows(){
   var S=ptvStats();
-  var rows=[['Phẫu thuật viên','Tổng ca','Có mở','Không mở','Tỷ lệ mở (%)','Ghi chú']];
+  var rows=[['Phẫu thuật viên','Tổng ca','Có cắt','Không cắt','Tỷ lệ cắt (%)','Ghi chú']];
   S.rows.forEach(function(o){
     rows.push([o.ptv,o.n,o.lpp,o.ctl,o.pct,
       o.risk ? 'Gần như chỉ làm một cách — trùng lặp với biến phơi nhiễm' : '']);
   });
   rows.push(['','','','','','']);
-  rows.push(['Ghi chú','Nếu một phẫu thuật viên gần như luôn mở hoặc gần như không bao giờ mở thì yếu tố phẫu thuật viên và biến phơi nhiễm gần như trùng nhau. Khi đó cần đưa phẫu thuật viên vào mô hình hiệu ứng ngẫu nhiên và phân tích độ nhạy riêng.','','','','']);
+  rows.push(['Ghi chú','Nếu một phẫu thuật viên gần như luôn cắt hoặc gần như không bao giờ cắt thì yếu tố phẫu thuật viên và biến phơi nhiễm gần như trùng nhau. Khi đó cần đưa phẫu thuật viên vào mô hình hiệu ứng ngẫu nhiên và phân tích độ nhạy riêng.','','','','']);
   return rows;
 }
 
@@ -1205,7 +1205,7 @@ function openPtv(){
   if(!S.rows.length){ toast('Chưa có ca nào được nhận vào'); return; }
   var risky=S.rows.filter(function(o){return o.risk;});
   var h='<div class="warn">Bảng này cho biết mức độ <b>trùng lặp giữa phẫu thuật viên và biến phơi nhiễm</b>. '
-   +'Nếu một người gần như luôn mở hoặc gần như không bao giờ mở thì hiệu quả kỹ thuật khó tách khỏi tay nghề người mổ.</div>';
+   +'Nếu một người gần như luôn cắt hoặc gần như không bao giờ cắt thì hiệu quả kỹ thuật khó tách khỏi tay nghề người mổ.</div>';
   if(risky.length)
     h+='<div class="errb"><b>'+risky.length+' phẫu thuật viên gần như chỉ làm một cách:</b><br>'
       +risky.map(function(o){return o.ptv+' — '+o.pct+'%';}).join('<br>')+'</div>';
@@ -1216,7 +1216,7 @@ function openPtv(){
      +'<b style="color:'+col+';font-size:17px">'+o.pct+'%</b></div>'
      +'<div style="height:9px;background:var(--soft);border-radius:20px;overflow:hidden;margin:8px 0 6px">'
      +'<i style="display:block;height:100%;width:'+o.pct+'%;background:'+col+'"></i></div>'
-     +'<span style="font-size:12.5px;color:var(--ink3)">'+o.n+' ca · mở '+o.lpp+' · không mở '+o.ctl
+     +'<span style="font-size:12.5px;color:var(--ink3)">'+o.n+' ca · cắt '+o.lpp+' · không cắt '+o.ctl
      +'</span></div>';
   });
   sheet('Phân bố theo phẫu thuật viên', included().length+' ca được nhận vào', h);
@@ -1230,7 +1230,7 @@ function openGuide(){
    +'<li>Nút <b>“đánh dấu Không”</b> ở góc phải tiêu đề mục điền Không cho toàn bộ câu Có/Không còn trống — rồi chỉ sửa vài câu có.</li>'
    +'<li>Mục G có bảng rà soát: chạm vào dòng nào là nhảy thẳng tới ô đó.</li>'
    +'<li>Đổi giao diện sáng/tối trong bảng điều khiển.</li></ul></div>'
-   +'<div class="card"><h3>Cảnh báo mâu thuẫn</h3><p>App tự đối chiếu 19 cặp biến với nhau. Ví dụ: có làm cửa sổ màng tim nhưng ghi không mở màng phổi, ghi không POAF nhưng lại có điều trị rung nhĩ, ngày khởi phát POAF muộn hơn ngày xuất viện. Ô nghi ngờ được viền vàng kèm lời nhắc.</p><p>Đây chỉ là nhắc, không chặn — bạn vẫn lưu được nếu số liệu đúng như hồ sơ.</p></div>'
+   +'<div class="card"><h3>Cảnh báo mâu thuẫn</h3><p>App tự đối chiếu 19 cặp biến với nhau. Ví dụ: có cắt màng ngoài tim nhưng ghi không mở màng phổi, ghi không POAF nhưng lại có điều trị rung nhĩ, ngày khởi phát POAF muộn hơn ngày xuất viện. Ô nghi ngờ được viền vàng kèm lời nhắc.</p><p>Đây chỉ là nhắc, không chặn — bạn vẫn lưu được nếu số liệu đúng như hồ sơ.</p></div>'
    +'<div class="card"><h3>Thứ tự nhập</h3><p>Đi lần lượt A → B → B₂ → C → D → E → F → G. Phần <b>F (biên bản phẫu thuật)</b> bị khóa cho tới khi ghi xong kết cục. Thời điểm mở khóa của từng ca được lưu lại làm bằng chứng cho biện pháp làm mù ở mục 2.6.3.</p></div>'
    +'<div class="card"><h3>EuroSCORE II</h3><p>Tính tự động ở mục B₂. Chỉ nhập những yếu tố chưa có ở mục B. Nhấn “Xem các yếu tố đang được tính” để kiểm tra từng hệ số.</p><p>Ba yếu tố luôn bằng 0 do tiêu chuẩn loại trừ: mổ tim lại, phẫu thuật động mạch chủ ngực, mức độ nặng can thiệp.</p></div>'
    +'<div class="card"><h3>Sao lưu — quan trọng nhất</h3><p>Dữ liệu nằm trong bộ nhớ Safari trên máy này. <b>Cuối mỗi buổi hãy bấm “Tải file sao lưu”</b> rồi lưu vào Files hoặc gửi lên Drive.</p><ul><li>Xóa dữ liệu Safari sẽ mất sạch.</li><li>Nếu mở app từ Files thay vì từ Màn hình chính, iOS có thể dọn bộ nhớ sớm hơn — càng phải sao lưu thường xuyên.</li></ul></div>'
